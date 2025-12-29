@@ -10,7 +10,7 @@
 <style>
 body {
   font-family: Arial, sans-serif;
-  max-width: 420px;
+  max-width: 480px;
   margin: auto;
   padding: 16px;
 }
@@ -27,6 +27,8 @@ button {
   border-radius: 6px;
 }
 h3 { margin-top: 20px; }
+table { border-collapse: collapse; width: 100%; margin-top:10px;}
+table th, table td { border: 1px solid #ccc; padding: 6px; text-align: center;}
 </style>
 </head>
 
@@ -46,29 +48,37 @@ h3 { margin-top: 20px; }
 
 <button onclick="save()">Сохранить</button>
 
+<h3>Фильтр по месяцу</h3>
+<select id="filterMonth"></select>
+<select id="filterYear"></select>
+<button onclick="loadReport()">Применить</button>
+
 <h3>Отчет за месяц</h3>
 <div>
   Доход: <span id="totalIncome">0</span> | Расход: <span id="totalExpense">0</span>
 </div>
 <canvas id="expenseChart" width="400" height="200"></canvas>
 
+<h3>Таблица операций</h3>
+<table id="operationsTable">
+  <thead>
+    <tr><th>Дата</th><th>Тип</th><th>Сумма</th><th>Категория</th><th>Комментарий</th></tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
 <script>
 const tg = window.Telegram.WebApp;
 tg.expand();
-
 const user = tg.initDataUnsafe?.user || { id: 0 };
 
 /* 🔴 ВСТАВЬ СВОЙ WEB APP URL */
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbxbGoASp4tI1EpEfwUME-M54XVXQcnqhlQ55qunaa3Edv2mLFkXQuU16Y-Sci2SJ6kwYQ/exec";
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbzgWCVO8jOTxHh15_DEJRm0ADG5evCZola9_rz5GFqu1IFnFx71CbZ-EUHMxH9YjgXhZA/exec";
 
 /* 🔹 КАТЕГОРИИ */
 const categories = {
-  income: [
-    "Зарплата","Подработка","Подарки","Прочее"
-  ],
-  expense: [
-    "Продукты","Жильё","Транспорт","Дети","Здоровье","Развлечения","Одежда","Прочее"
-  ]
+  income: ["Зарплата","Подработка","Подарки","Прочее"],
+  expense: ["Продукты","Жильё","Транспорт","Дети","Здоровье","Развлечения","Одежда","Прочее"]
 };
 
 /* Обновляем список категорий при смене типа */
@@ -86,6 +96,17 @@ function updateCategories() {
 document.getElementById("type").addEventListener("change", updateCategories);
 updateCategories();
 
+/* Заполнение фильтров месяца и года */
+const monthSelect = document.getElementById("filterMonth");
+const yearSelect = document.getElementById("filterYear");
+const months = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
+const currentMonth = new Date().getMonth();
+const currentYear = new Date().getFullYear();
+months.forEach((m,i)=>monthSelect.options.add(new Option(m,i+1)));
+monthSelect.value = currentMonth+1;
+for(let y=currentYear-5; y<=currentYear+1; y++) yearSelect.options.add(new Option(y,y));
+yearSelect.value = currentYear;
+
 /* 🔹 СОХРАНЕНИЕ */
 async function save() {
   const data = {
@@ -95,56 +116,53 @@ async function save() {
     comment: document.getElementById("comment").value,
     user_id: user.id
   };
-
-  if (!data.amount) {
+  if(!data.amount){
     tg.showPopup({title:"Ошибка", message:"Введите сумму", buttons:[{type:"ok"}]});
     return;
   }
-
   try {
     await fetch(SHEET_URL, { method:"POST", mode:"no-cors", body:JSON.stringify(data) });
-
     document.getElementById("amount").value = "";
     document.getElementById("comment").value = "";
-
-    tg.showPopup({
-      title:"Готово ✅",
-      message:"Запись успешно добавлена в бюджет",
-      buttons:[{type:"ok"}]
-    });
-
-    loadReport(); // обновляем отчет
-
-  } catch(e) {
+    tg.showPopup({title:"Готово ✅", message:"Запись успешно добавлена", buttons:[{type:"ok"}]});
+    loadReport();
+  } catch(e){
     console.error(e);
     tg.showPopup({title:"Ошибка ❌", message:"Не удалось сохранить запись", buttons:[{type:"ok"}]});
   }
 }
 
-/* 🔹 ЗАГРУЗКА ОТЧЕТА */
+/* 🔹 ЗАГРУЗКА ОТЧЕТА И ТАБЛИЦЫ */
 async function loadReport() {
   try {
-    const res = await fetch(SHEET_URL);
+    const month = monthSelect.value;
+    const year = yearSelect.value;
+    const res = await fetch(`${SHEET_URL}?month=${month}&year=${year}`);
     const data = await res.json();
 
     document.getElementById("totalIncome").textContent = data.totalIncome.toFixed(2);
     document.getElementById("totalExpense").textContent = data.totalExpense.toFixed(2);
 
+    // График расходов
     const ctx = document.getElementById('expenseChart').getContext('2d');
     const labels = Object.keys(data.categorySums);
     const values = Object.values(data.categorySums);
 
-    new Chart(ctx, {
-      type: 'pie',
-      data: { labels: labels, datasets:[{label:'Расходы по категориям', data: values,
-        backgroundColor:['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40','#C9CBCF','#FF6666']
-      }]},
+    new Chart(ctx,{
+      type:'pie',
+      data:{ labels, datasets:[{label:'Расходы', data:values,
+        backgroundColor:['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40','#C9CBCF','#FF6666']}]},
       options:{responsive:true, plugins:{legend:{position:'bottom'}}}
     });
 
-  } catch(e) {
-    console.error(e);
-  }
+    // Таблица операций
+    const tbody = document.querySelector("#operationsTable tbody");
+    tbody.innerHTML = "";
+    data.operations.reverse().forEach(op=>{
+      tbody.innerHTML += `<tr><td>${op.date}</td><td>${op.type}</td><td>${op.amount}</td><td>${op.category}</td><td>${op.comment}</td></tr>`;
+    });
+
+  } catch(e){ console.error(e); }
 }
 
 loadReport();
