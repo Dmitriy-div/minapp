@@ -55,12 +55,24 @@ const tg = window.Telegram.WebApp;
 tg.expand();
 const user = tg.initDataUnsafe?.user || {id:0};
 
-/* 🔴 Вставь сюда свой URL Web App */
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbwV_HURc2JSSJtSB8bm9YpKW3luApQS_ResKETu3hO79qFi_At9KxEyy6RodK9KrxEAYw/exec";
+/* 🔴 Вставь сюда URL Web App */
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbxPGMmwENuiYGfV8JDVkfkDNvgmsfAXE2fDMbIO-yZoA0-xDcgIhi5E3XP5g2hmoKY0Yw/exec";
 
 /* Категории */
 const categories={income:["Зарплата","Подработка","Подарки","Прочее"],expense:["Продукты","Жильё","Транспорт","Дети","Здоровье","Развлечения","Одежда","Прочее"]};
-function updateCategories(){const type=document.getElementById("type").value;const select=document.getElementById("category");select.innerHTML="";categories[type].forEach(cat=>{const option=document.createElement("option");option.value=cat;option.textContent=cat;select.appendChild(option);});}
+
+function updateCategories(){
+  const type=document.getElementById("type").value;
+  const select=document.getElementById("category");
+  select.innerHTML="";
+  categories[type].forEach(cat=>{
+    const option=document.createElement("option");
+    option.value=cat;
+    option.textContent=cat;
+    select.appendChild(option);
+  });
+}
+
 document.getElementById("type").addEventListener("change",updateCategories);
 updateCategories();
 
@@ -84,23 +96,30 @@ async function save(){
     comment: document.getElementById("comment").value,
     telegram_id: user.id
   };
-  if(!data.amount){tg.showPopup({title:"Ошибка",message:"Введите сумму",buttons:[{type:"ok"}]});return;}
+  if(!data.amount){
+    tg.showPopup({title:"Ошибка",message:"Введите сумму",buttons:[{type:"ok"}]});
+    return;
+  }
   try{
     await fetch(SHEET_URL,{method:"POST",body:JSON.stringify(data)});
     document.getElementById("amount").value="";
     document.getElementById("comment").value="";
     tg.showPopup({title:"Готово ✅",message:"Запись успешно добавлена",buttons:[{type:"ok"}]});
     loadReport();
-  }catch(e){console.error(e);tg.showPopup({title:"Ошибка ❌",message:"Не удалось сохранить запись",buttons:[{type:"ok"}]);}
+  }catch(e){
+    console.error(e);
+    tg.showPopup({title:"Ошибка ❌",message:"Не удалось сохранить запись",buttons:[{type:"ok"}]});
+  }
 }
 
-/* Загрузка отчета, графика и операций */
+/* Загрузка отчета и операций */
 async function loadReport(){
   try{
     const month=monthSelect.value;
     const year=yearSelect.value;
     const res=await fetch(`${SHEET_URL}?month=${month}&year=${year}`);
     const data=await res.json();
+
     document.getElementById("totalIncome").textContent=data.totalIncome.toFixed(2);
     document.getElementById("totalExpense").textContent=data.totalExpense.toFixed(2);
 
@@ -125,4 +144,3 @@ loadReport();
 </script>
 </body>
 </html>
-
