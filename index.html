@@ -4,8 +4,6 @@
   <meta charset="UTF-8">
   <title>Семейный бюджет</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- Telegram WebApp -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
@@ -15,7 +13,7 @@
       margin: auto;
       padding: 16px;
     }
-    input, select, button {
+    select, input, button {
       width: 100%;
       margin: 6px 0;
       padding: 10px;
@@ -26,15 +24,6 @@
       color: white;
       border: none;
       border-radius: 6px;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-    li {
-      padding: 6px 0;
-      border-bottom: 1px solid #ddd;
-      font-size: 14px;
     }
   </style>
 </head>
@@ -48,13 +37,12 @@
   </select>
 
   <input id="amount" type="number" placeholder="Сумма">
-  <input id="category" type="text" placeholder="Категория">
+
+  <select id="category"></select>
+
   <input id="comment" type="text" placeholder="Комментарий">
 
   <button onclick="save()">Сохранить</button>
-
-  <h3>Операции</h3>
-  <ul id="operations"></ul>
 
 <script>
 const tg = window.Telegram.WebApp;
@@ -62,10 +50,47 @@ tg.expand();
 
 const user = tg.initDataUnsafe?.user || { id: 0 };
 
-/* 🔴 ВСТАВЬ СВОЙ Web App URL */
+/* 🔴 ВСТАВЬ СВОЙ WEB APP URL */
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbxbGoASp4tI1EpEfwUME-M54XVXQcnqhlQ55qunaa3Edv2mLFkXQuU16Y-Sci2SJ6kwYQ/exec";
 
-/* ===== СОХРАНЕНИЕ ===== */
+/* 🔹 КАТЕГОРИИ */
+const categories = {
+  income: [
+    "Зарплата",
+    "Colour Wood",
+    "Подарки",
+    "Прочее"
+  ],
+  expense: [
+    "Продукты",
+    "Квартира",
+    "Транспорт",
+    "Дети",
+    "Здоровье",
+    "Развлечения",
+    "Одежда",
+    "Прочее"
+  ]
+};
+
+/* Обновляем список категорий при смене типа */
+function updateCategories() {
+  const type = document.getElementById("type").value;
+  const select = document.getElementById("category");
+  select.innerHTML = "";
+
+  categories[type].forEach(cat => {
+    const option = document.createElement("option");
+    option.value = cat;
+    option.textContent = cat;
+    select.appendChild(option);
+  });
+}
+
+document.getElementById("type").addEventListener("change", updateCategories);
+updateCategories();
+
+/* 🔹 СОХРАНЕНИЕ */
 async function save() {
   const data = {
     type: document.getElementById("type").value,
@@ -75,8 +100,12 @@ async function save() {
     user_id: user.id
   };
 
-  if (!data.amount || !data.category) {
-    alert("Заполни сумму и категорию");
+  if (!data.amount) {
+    tg.showPopup({
+      title: "Ошибка",
+      message: "Введите сумму",
+      buttons: [{ type: "ok" }]
+    });
     return;
   }
 
@@ -87,41 +116,26 @@ async function save() {
       body: JSON.stringify(data)
     });
 
+    // Очистка полей после сохранения
     document.getElementById("amount").value = "";
-    document.getElementById("category").value = "";
     document.getElementById("comment").value = "";
 
-    setTimeout(loadOperations, 500);
-
-  } catch (e) {
-    alert("Ошибка сохранения");
-    console.error(e);
-  }
-}
-
-/* ===== ЗАГРУЗКА ===== */
-async function loadOperations() {
-  try {
-    const res = await fetch(SHEET_URL);
-    const rows = await res.json();
-
-    const list = document.getElementById("operations");
-    list.innerHTML = "";
-
-    rows.slice(1).reverse().forEach(r => {
-      list.innerHTML += `
-        <li>
-          ${r[0]} | ${r[1]} | ${r[2]} | ${r[3]}
-        </li>
-      `;
+    // Всплывающее окно об успешном сохранении
+    tg.showPopup({
+      title: "Готово ✅",
+      message: "Запись успешно добавлена в бюджет",
+      buttons: [{ type: "ok" }]
     });
 
   } catch (e) {
     console.error(e);
+    tg.showPopup({
+      title: "Ошибка ❌",
+      message: "Не удалось сохранить запись",
+      buttons: [{ type: "ok" }]
+    });
   }
 }
-
-loadOperations();
 </script>
 
 </body>
