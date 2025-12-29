@@ -1,73 +1,136 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
+  <meta charset="UTF-8">
   <title>Семейный бюджет</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Telegram WebApp -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
   <style>
-    body { font-family: Arial; max-width: 400px; margin: auto; padding: 20px; }
-    input, select, button { margin: 5px 0; width: 100%; padding: 8px; }
-    ul { padding-left: 0; list-style: none; }
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 420px;
+      margin: auto;
+      padding: 16px;
+    }
+    input, select, button {
+      width: 100%;
+      margin: 6px 0;
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      background: #2ea6ff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      padding: 6px 0;
+      border-bottom: 1px solid #ddd;
+      font-size: 14px;
+    }
   </style>
 </head>
+
 <body>
-  <h2>Семейный бюджет</h2>
+  <h2>💰 Семейный бюджет</h2>
 
   <select id="type">
     <option value="income">Доход</option>
     <option value="expense">Расход</option>
   </select>
 
-  <input type="number" id="amount" placeholder="Сумма">
-  <input type="text" id="category" placeholder="Категория">
-  <input type="text" id="comment" placeholder="Комментарий">
+  <input id="amount" type="number" placeholder="Сумма">
+  <input id="category" type="text" placeholder="Категория">
+  <input id="comment" type="text" placeholder="Комментарий">
 
   <button onclick="save()">Сохранить</button>
 
   <h3>Операции</h3>
   <ul id="operations"></ul>
 
-  <script>
-    const tg = window.Telegram.WebApp;
-    const user = tg.initDataUnsafe.user;
+<script>
+const tg = window.Telegram.WebApp;
+tg.expand();
 
-    const SHEET_URL = "https://script.google.com/macros/s/AKfycbzC4gIiECjEVs8UV5EJAlf4w--9NQpgZ0XNBEWnCG4Z49wZl2jVAzJAE46OQGL7bM0s_Q/exec"; // вставьте ваш Apps Script Web App URL
+const user = tg.initDataUnsafe?.user || { id: 0 };
 
-    async function save() {
-      const data = {
-        type: document.getElementById("type").value,
-        amount: parseFloat(document.getElementById("amount").value),
-        category: document.getElementById("category").value,
-        comment: document.getElementById("comment").value,
-        user_id: user.id
-      };
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbxvfcRZu3EYU3WgKQ6T0F3OGFvGALaveYDyx93A1OKAVaoubcboroGkmr_E0q4oJXCH2w/exec";
 
-      await fetch(SHEET_URL, {
-        method: "POST",
-        body: JSON.stringify(data)
-      });
+/* =======================
+   СОХРАНЕНИЕ
+======================= */
+async function save() {
+  const data = {
+    type: document.getElementById("type").value,
+    amount: Number(document.getElementById("amount").value),
+    category: document.getElementById("category").value,
+    comment: document.getElementById("comment").value,
+    user_id: user.id
+  };
 
-      document.getElementById("amount").value = "";
-      document.getElementById("category").value = "";
-      document.getElementById("comment").value = "";
+  if (!data.amount || !data.category) {
+    alert("Заполни сумму и категорию");
+    return;
+  }
 
-      loadOperations();
-    }
+  try {
+    const res = await fetch(SHEET_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data)
+    });
 
-    async function loadOperations() {
-      const res = await fetch(SHEET_URL);
-      const data = await res.json();
-      const list = document.getElementById("operations");
-      list.innerHTML = "";
-      data.slice(1).reverse().forEach(r => {
-        list.innerHTML += `<li>${r[0]} | ${r[1]} | ${r[2]} | ${r[3]}</li>`;
-      });
-    }
+    const text = await res.text();
+    console.log("POST:", text);
+
+    document.getElementById("amount").value = "";
+    document.getElementById("category").value = "";
+    document.getElementById("comment").value = "";
 
     loadOperations();
-  </script>
+
+  } catch (e) {
+    alert("Ошибка сохранения");
+    console.error(e);
+  }
+}
+
+/* =======================
+   ЗАГРУЗКА ОПЕРАЦИЙ
+======================= */
+async function loadOperations() {
+  try {
+    const res = await fetch(SHEET_URL);
+    const rows = await res.json();
+
+    const list = document.getElementById("operations");
+    list.innerHTML = "";
+
+    rows.slice(1).reverse().forEach(r => {
+      list.innerHTML += `
+        <li>
+          ${r[0]} | ${r[1]} | ${r[2]} | ${r[3]}
+        </li>
+      `;
+    });
+
+  } catch (e) {
+    console.error("Load error", e);
+  }
+}
+
+loadOperations();
+</script>
+
 </body>
 </html>
-
-+
-
-
-
