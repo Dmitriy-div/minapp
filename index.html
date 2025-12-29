@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Семейный бюджет</title>
+  <style>
+    body { font-family: Arial; max-width: 400px; margin: auto; padding: 20px; }
+    input, select, button { margin: 5px 0; width: 100%; padding: 8px; }
+    ul { padding-left: 0; list-style: none; }
+  </style>
+</head>
+<body>
+  <h2>Семейный бюджет</h2>
+
+  <select id="type">
+    <option value="income">Доход</option>
+    <option value="expense">Расход</option>
+  </select>
+
+  <input type="number" id="amount" placeholder="Сумма">
+  <input type="text" id="category" placeholder="Категория">
+  <input type="text" id="comment" placeholder="Комментарий">
+
+  <button onclick="save()">Сохранить</button>
+
+  <h3>Операции</h3>
+  <ul id="operations"></ul>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    const user = tg.initDataUnsafe.user;
+
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbzyD3pCgp7y76jSd8NIZWzENajle-KAZAyn8A9TUojQ6_Aq9rmFjNvnf1D6-PK_-I7Eag/exec"; // вставьте ваш Apps Script Web App URL
+
+    async function save() {
+      const data = {
+        type: document.getElementById("type").value,
+        amount: parseFloat(document.getElementById("amount").value),
+        category: document.getElementById("category").value,
+        comment: document.getElementById("comment").value,
+        user_id: user.id
+      };
+
+      await fetch(SHEET_URL, {
+        method: "POST",
+        body: JSON.stringify(data)
+      });
+
+      document.getElementById("amount").value = "";
+      document.getElementById("category").value = "";
+      document.getElementById("comment").value = "";
+
+      loadOperations();
+    }
+
+    async function loadOperations() {
+      const res = await fetch(SHEET_URL);
+      const data = await res.json();
+      const list = document.getElementById("operations");
+      list.innerHTML = "";
+      data.slice(1).reverse().forEach(r => {
+        list.innerHTML += `<li>${r[0]} | ${r[1]} | ${r[2]} | ${r[3]}</li>`;
+      });
+    }
+
+    loadOperations();
+  </script>
+</body>
+</html>
++
