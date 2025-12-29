@@ -9,28 +9,19 @@
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
-
 body { font-family: 'Roboto', sans-serif; max-width:480px; margin:auto; padding:16px; background:#f0f2f5; color:#333; }
 h2 { text-align:center; color:#2f80ed; }
-
 .card { background:#fff; border-radius:12px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,0.08); margin:12px 0; }
 input, select { width:100%; padding:12px; margin:6px 0; border-radius:8px; border:1px solid #ddd; font-size:16px; }
 button { width:100%; padding:12px; margin-top:12px; border-radius:10px; border:none; background:#2f80ed; color:#fff; font-size:18px; cursor:pointer; transition:0.2s; }
 button:hover { background:#1366d6; }
-
 #totals { display:flex; justify-content:space-between; margin-top:12px; }
 .total-card { flex:1; background:#fff; border-radius:12px; padding:16px; margin:4px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.08); transition:transform 0.3s, background 0.3s; }
-
 canvas { margin-top:16px; border-radius:12px; background:#fff; padding:12px; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
-
 .operations-container { margin-top:16px; max-height:300px; overflow-y:auto; position:relative; }
-
-.operation-card {
-  display:flex; justify-content:space-between; padding:12px; margin-bottom:8px; border-radius:10px;
+.operation-card { display:flex; justify-content:space-between; padding:12px; margin-bottom:8px; border-radius:10px;
   background:#fff; box-shadow:0 2px 6px rgba(0,0,0,0.06); opacity:0; transform:translateY(-20px);
-  transition:opacity 0.5s, transform 0.5s, background 0.5s;
-}
-
+  transition:opacity 0.5s, transform 0.5s, background 0.5s; }
 .operation-income { border-left:5px solid #4caf50; }
 .operation-expense { border-left:5px solid #f44336; }
 .new-operation { background:#fff7d6; }
@@ -85,11 +76,10 @@ canvas { margin-top:16px; border-radius:12px; background:#fff; padding:12px; box
 <div id="loansPage" style="display:none;">
   <div class="card">
     <h3>Трекер рассрочки</h3>
-    <!-- Прогресс бар -->
     <div id="loanProgress" style="background:#ddd;border-radius:12px;overflow:hidden;height:24px;margin-bottom:12px;">
       <div id="loanProgressBar" style="height:100%;width:0%;background:#2f80ed;transition:width 0.5s;"></div>
     </div>
-    <!-- График -->
+    <h4>Оставшаяся сумма к оплате: <span id="loanRemaining">0.00 BYN</span></h4>
     <canvas id="loanChart" width="400" height="200" style="margin-bottom:12px;"></canvas>
     <div id="loansContainer"></div>
   </div>
@@ -107,7 +97,6 @@ canvas { margin-top:16px; border-radius:12px; background:#fff; padding:12px; box
 const tg = window.Telegram.WebApp;
 tg.expand();
 const user = tg.initDataUnsafe?.user || { id:0 };
-
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbx9R6_fJ9YiRlSujc93Pc_tRci_MwCpvDTLjdZrIFff1VO2rY_s4dyB3OXnNoELbTN7BQ/exec"; // Вставь свой URL Apps Script
 
 /* ---------- Навигация ---------- */
@@ -181,7 +170,6 @@ async function loadReport(highlightNew=false){
     animateValue("totalIncome", parseFloat(document.getElementById("totalIncome").textContent), data.totalIncome);
     animateValue("totalExpense", parseFloat(document.getElementById("totalExpense").textContent), data.totalExpense);
 
-    // График расходов
     const ctx = document.getElementById('expenseChart').getContext('2d');
     const labels = Object.keys(data.categorySums);
     const values = Object.values(data.categorySums);
@@ -192,7 +180,6 @@ async function loadReport(highlightNew=false){
       options:{responsive:true, plugins:{legend:{position:'bottom'}}, animation:{animateScale:true, animateRotate:true}}
     });
 
-    // Операции
     const container = document.getElementById("operationsContainer");
     const oldCards = Array.from(container.children);
     oldCards.forEach(c=>c.classList.add("fade-out"));
@@ -202,7 +189,7 @@ async function loadReport(highlightNew=false){
         const div = document.createElement("div");
         div.className="operation-card "+(op.type==="income"?"operation-income":"operation-expense");
         if(highlightNew && i===0) div.classList.add("new-operation");
-        div.innerHTML=`<div>${op.date}</div><div>${op.type}</div><div>${op.amount}</div><div>${op.category}</div><div>${op.comment}</div>`;
+        div.innerHTML=`<div>${op.date}</div><div>${op.type}</div><div>${op.amount} BYN</div><div>${op.category}</div><div>${op.comment}</div>`;
         container.appendChild(div);
         setTimeout(()=>div.classList.add("fade-in"),10);
         if(highlightNew && i===0) setTimeout(()=>div.classList.remove("new-operation"),2000);
@@ -228,7 +215,15 @@ function animateValue(id,start,end,duration=600){
 loadReport();
 
 /* ---------- Трекер рассрочки ---------- */
-let loansData = [];
+let loansData = [
+  {date:"2026-01-09", amount:204.23, comment:"Платёж 1", paid:false},
+  {date:"2026-02-09", amount:204.23, comment:"Платёж 2", paid:false},
+  {date:"2026-03-09", amount:204.23, comment:"Платёж 3", paid:false},
+  {date:"2026-04-09", amount:204.23, comment:"Платёж 4", paid:false},
+  {date:"2026-05-09", amount:204.23, comment:"Платёж 5", paid:false},
+  {date:"2026-06-09", amount:204.23, comment:"Платёж 6", paid:false}
+];
+
 let loanChart = null;
 
 function addLoan(){
@@ -258,14 +253,17 @@ function loadLoans(){
     if(loan.paid) paid += loan.amount;
     const div = document.createElement("div");
     div.className="operation-card "+(loan.paid?"operation-income":"operation-expense");
-    div.innerHTML=`<div>${loan.date}</div><div>${loan.amount.toFixed(2)}€</div><div>${loan.comment}</div><button onclick="togglePaid(${i})">${loan.paid?"Отменить":"Оплачено"}</button>`;
+    div.innerHTML=`<div>${loan.date}</div><div>${loan.amount.toFixed(2)} BYN</div><div>${loan.comment}</div>
+                     <button onclick="togglePaid(${i})">${loan.paid?"Отменить":"Оплачено"}</button>`;
     container.appendChild(div);
   });
+
+  const remaining = (total - paid).toFixed(2);
+  document.getElementById("loanRemaining").textContent = remaining + " BYN";
 
   const progress = total? Math.round((paid/total)*100) : 0;
   document.getElementById("loanProgressBar").style.width = progress+"%";
 
-  // График рассрочки
   const ctx = document.getElementById('loanChart').getContext('2d');
   const labels = loansData.map(l=>l.date);
   const paidData = loansData.map(l=>l.paid?l.amount:0);
