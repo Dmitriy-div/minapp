@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Семейный бюджет</title>
+<title>Семейный бюджет и рассрочка</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -33,52 +33,74 @@ canvas { margin-top:16px; border-radius:12px; background:#fff; padding:12px; box
 
 .operation-income { border-left:5px solid #4caf50; }
 .operation-expense { border-left:5px solid #f44336; }
-
 .new-operation { background:#fff7d6; }
-
 .fade-out { opacity:0; transform:translateY(-20px); }
 .fade-in { opacity:1; transform:translateY(0); }
-
 </style>
 </head>
 
 <body>
 <h2>💰 Семейный бюджет</h2>
 
+<!-- Навигация -->
 <div class="card">
-  <select id="type">
-    <option value="income">Доход</option>
-    <option value="expense">Расход</option>
-  </select>
-  <input id="amount" type="number" placeholder="Сумма">
-  <select id="category"></select>
-  <input id="comment" type="text" placeholder="Комментарий">
-  <button onclick="save()">Сохранить</button>
+  <button onclick="showPage('budget')">Бюджет</button>
+  <button onclick="showPage('loans')">Рассрочка</button>
 </div>
 
-<div class="card">
-  <h3>Фильтр по месяцу</h3>
-  <select id="filterMonth"></select>
-  <select id="filterYear"></select>
-  <button onclick="loadReport()">Применить</button>
-</div>
-
-<div id="totals">
-  <div class="total-card" id="incomeCard">
-    <h4>Доход</h4>
-    <p id="totalIncome">0</p>
+<!-- СТРАНИЦА БЮДЖЕТ -->
+<div id="budgetPage">
+  <div class="card">
+    <select id="type">
+      <option value="income">Доход</option>
+      <option value="expense">Расход</option>
+    </select>
+    <input id="amount" type="number" placeholder="Сумма">
+    <select id="category"></select>
+    <input id="comment" type="text" placeholder="Комментарий">
+    <button onclick="save()">Сохранить</button>
   </div>
-  <div class="total-card" id="expenseCard">
-    <h4>Расход</h4>
-    <p id="totalExpense">0</p>
+
+  <div class="card">
+    <h3>Фильтр по месяцу</h3>
+    <select id="filterMonth"></select>
+    <select id="filterYear"></select>
+    <button onclick="loadReport()">Применить</button>
+  </div>
+
+  <div id="totals">
+    <div class="total-card" id="incomeCard"><h4>Доход</h4><p id="totalIncome">0</p></div>
+    <div class="total-card" id="expenseCard"><h4>Расход</h4><p id="totalExpense">0</p></div>
+  </div>
+
+  <canvas id="expenseChart" width="400" height="200"></canvas>
+
+  <div class="card">
+    <h3>Последние операции</h3>
+    <div class="operations-container" id="operationsContainer"></div>
   </div>
 </div>
 
-<canvas id="expenseChart" width="400" height="200"></canvas>
+<!-- СТРАНИЦА РАССРОЧКИ -->
+<div id="loansPage" style="display:none;">
+  <div class="card">
+    <h3>Трекер рассрочки</h3>
+    <!-- Прогресс бар -->
+    <div id="loanProgress" style="background:#ddd;border-radius:12px;overflow:hidden;height:24px;margin-bottom:12px;">
+      <div id="loanProgressBar" style="height:100%;width:0%;background:#2f80ed;transition:width 0.5s;"></div>
+    </div>
+    <!-- График -->
+    <canvas id="loanChart" width="400" height="200" style="margin-bottom:12px;"></canvas>
+    <div id="loansContainer"></div>
+  </div>
 
-<div class="card">
-  <h3>Последние операции</h3>
-  <div class="operations-container" id="operationsContainer"></div>
+  <div class="card">
+    <h4>Добавить платеж</h4>
+    <input type="date" id="loanDate">
+    <input type="number" id="loanAmount" placeholder="Сумма">
+    <input type="text" id="loanComment" placeholder="Комментарий">
+    <button onclick="addLoan()">Добавить платеж</button>
+  </div>
 </div>
 
 <script>
@@ -86,18 +108,25 @@ const tg = window.Telegram.WebApp;
 tg.expand();
 const user = tg.initDataUnsafe?.user || { id:0 };
 
-/* URL Apps Script */
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbx9R6_fJ9YiRlSujc93Pc_tRci_MwCpvDTLjdZrIFff1VO2rY_s4dyB3OXnNoELbTN7BQ/exec";
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbx9R6_fJ9YiRlSujc93Pc_tRci_MwCpvDTLjdZrIFff1VO2rY_s4dyB3OXnNoELbTN7BQ/exec"; // Вставь свой URL Apps Script
 
+/* ---------- Навигация ---------- */
+const budgetPage = document.getElementById("budgetPage");
+const loansPage = document.getElementById("loansPage");
+function showPage(page){
+  if(page==='budget'){ budgetPage.style.display='block'; loansPage.style.display='none'; }
+  else { budgetPage.style.display='none'; loansPage.style.display='block'; loadLoans(); }
+}
+
+/* ---------- Категории ---------- */
 const categories = {
   income:["Зарплата","Подработка","Подарки","Прочее"],
   expense:["Продукты","Жильё","Транспорт","Дети","Здоровье","Развлечения","Одежда","Прочее"]
 };
-
 function updateCategories() {
   const type = document.getElementById("type").value;
   const select = document.getElementById("category");
-  select.innerHTML = "";
+  select.innerHTML="";
   categories[type].forEach(cat=>{
     const option = document.createElement("option");
     option.value = cat;
@@ -108,19 +137,20 @@ function updateCategories() {
 document.getElementById("type").addEventListener("change", updateCategories);
 updateCategories();
 
-/* Фильтры */
+/* ---------- Фильтры ---------- */
 const monthSelect = document.getElementById("filterMonth");
 const yearSelect = document.getElementById("filterYear");
 const months = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
 const currentMonth = new Date().getMonth();
 const currentYear = new Date().getFullYear();
 months.forEach((m,i)=>monthSelect.options.add(new Option(m,i+1)));
-monthSelect.value = currentMonth+1;
+monthSelect.value=currentMonth+1;
 for(let y=currentYear-5;y<=currentYear+1;y++) yearSelect.options.add(new Option(y,y));
-yearSelect.value = currentYear;
+yearSelect.value=currentYear;
 
-/* СОХРАНЕНИЕ */
-async function save() {
+/* ---------- Бюджет ---------- */
+let chartInstance = null;
+async function save(){
   const data = {
     type: document.getElementById("type").value,
     amount: document.getElementById("amount").value,
@@ -132,17 +162,15 @@ async function save() {
     tg.showPopup({title:"Ошибка", message:"Введите сумму", buttons:[{type:"ok"}]});
     return;
   }
-  try {
+  try{
     await fetch(SHEET_URL,{method:"POST",mode:"no-cors",body:JSON.stringify(data)});
     document.getElementById("amount").value="";
     document.getElementById("comment").value="";
     tg.showPopup({title:"Готово ✅", message:"Запись добавлена", buttons:[{type:"ok"}]});
     loadReport(true);
-  } catch(e){ console.error(e); tg.showPopup({title:"Ошибка ❌", message:"Не удалось сохранить запись", buttons:[{type:"ok"}]}); }
+  }catch(e){ console.error(e); tg.showPopup({title:"Ошибка ❌", message:"Не удалось сохранить запись", buttons:[{type:"ok"}]}); }
 }
 
-/* ЗАГРУЗКА ОТЧЕТА */
-let chartInstance = null;
 async function loadReport(highlightNew=false){
   try{
     const month = monthSelect.value;
@@ -164,10 +192,10 @@ async function loadReport(highlightNew=false){
       options:{responsive:true, plugins:{legend:{position:'bottom'}}, animation:{animateScale:true, animateRotate:true}}
     });
 
-    // Анимация смены операций
+    // Операции
     const container = document.getElementById("operationsContainer");
     const oldCards = Array.from(container.children);
-    oldCards.forEach(c=>{ c.classList.add("fade-out"); });
+    oldCards.forEach(c=>c.classList.add("fade-out"));
     setTimeout(()=>{
       container.innerHTML="";
       data.operations.reverse().forEach((op,i)=>{
@@ -177,14 +205,13 @@ async function loadReport(highlightNew=false){
         div.innerHTML=`<div>${op.date}</div><div>${op.type}</div><div>${op.amount}</div><div>${op.category}</div><div>${op.comment}</div>`;
         container.appendChild(div);
         setTimeout(()=>div.classList.add("fade-in"),10);
-        if(highlightNew && i===0){ setTimeout(()=>div.classList.remove("new-operation"),2000); }
+        if(highlightNew && i===0) setTimeout(()=>div.classList.remove("new-operation"),2000);
       });
     },300);
 
   }catch(e){ console.error(e); }
 }
 
-/* Анимация чисел */
 function animateValue(id,start,end,duration=600){
   const obj = document.getElementById(id);
   const range = end-start;
@@ -199,6 +226,61 @@ function animateValue(id,start,end,duration=600){
 }
 
 loadReport();
+
+/* ---------- Трекер рассрочки ---------- */
+let loansData = [];
+let loanChart = null;
+
+function addLoan(){
+  const date = document.getElementById("loanDate").value;
+  const amount = parseFloat(document.getElementById("loanAmount").value);
+  const comment = document.getElementById("loanComment").value;
+  if(!date || !amount) return alert("Введите дату и сумму");
+  loansData.push({date, amount, comment, paid:false});
+  document.getElementById("loanDate").value="";
+  document.getElementById("loanAmount").value="";
+  document.getElementById("loanComment").value="";
+  loadLoans();
+}
+
+function togglePaid(index){
+  loansData[index].paid = !loansData[index].paid;
+  loadLoans();
+}
+
+function loadLoans(){
+  const container = document.getElementById("loansContainer");
+  container.innerHTML="";
+  let total=0, paid=0;
+
+  loansData.forEach((loan,i)=>{
+    total += loan.amount;
+    if(loan.paid) paid += loan.amount;
+    const div = document.createElement("div");
+    div.className="operation-card "+(loan.paid?"operation-income":"operation-expense");
+    div.innerHTML=`<div>${loan.date}</div><div>${loan.amount.toFixed(2)}€</div><div>${loan.comment}</div><button onclick="togglePaid(${i})">${loan.paid?"Отменить":"Оплачено"}</button>`;
+    container.appendChild(div);
+  });
+
+  const progress = total? Math.round((paid/total)*100) : 0;
+  document.getElementById("loanProgressBar").style.width = progress+"%";
+
+  // График рассрочки
+  const ctx = document.getElementById('loanChart').getContext('2d');
+  const labels = loansData.map(l=>l.date);
+  const paidData = loansData.map(l=>l.paid?l.amount:0);
+  const unpaidData = loansData.map(l=>l.paid?0:l.amount);
+
+  if(loanChart) loanChart.destroy();
+  loanChart = new Chart(ctx,{
+    type:'bar',
+    data:{ labels, datasets:[
+      {label:'Оплачено', data:paidData, backgroundColor:'#2f80ed'},
+      {label:'Не оплачено', data:unpaidData, backgroundColor:'#f44336'}
+    ]},
+    options:{responsive:true, plugins:{legend:{position:'bottom'}}, scales:{y:{beginAtZero:true}}}
+  });
+}
 </script>
 </body>
 </html>
