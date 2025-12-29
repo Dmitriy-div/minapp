@@ -9,14 +9,50 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
-body { font-family: 'Inter', Arial, sans-serif; background: #f0f4f8; padding:16px; max-width:480px; margin:auto; }
-h2,h3{color:#2ea6ff;margin-bottom:12px;}
-.card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,0.08);margin-bottom:16px;}
-input,select,button{width:100%;padding:12px;margin:6px 0;border-radius:8px;border:1px solid #ddd;font-size:16px;}
-button{background:#2ea6ff;color:white;border:none;cursor:pointer;font-weight:600;transition:background 0.3s;}
-button:hover{background:#1b8cd8;}
-.operation-card{display:flex;justify-content:space-between;padding:12px;margin:6px 0;border-radius:8px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.06);flex-wrap:wrap;font-size:14px;}
-.operation-card span{margin:2px 0;}
+body {
+  font-family: 'Inter', Arial, sans-serif;
+  background: #f0f4f8;
+  padding: 16px;
+  max-width: 480px;
+  margin: auto;
+}
+h2, h3 { color: #2ea6ff; margin-bottom: 12px; }
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  margin-bottom: 16px;
+}
+input, select, button {
+  width: 100%;
+  padding: 12px;
+  margin: 6px 0;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 16px;
+}
+button {
+  background: #2ea6ff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s;
+}
+button:hover { background: #1b8cd8; }
+.operation-card {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  margin: 6px 0;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  font-size: 14px;
+  flex-wrap: wrap;
+}
+.operation-card span { margin: 2px 0; }
 </style>
 </head>
 
@@ -24,99 +60,132 @@ button:hover{background:#1b8cd8;}
 <h2>💰 Семейный бюджет</h2>
 
 <div class="card">
-<h3>Добавить запись</h3>
-<select id="type"></select>
-<input id="amount" type="number" placeholder="Сумма">
-<select id="category"></select>
-<input id="comment" type="text" placeholder="Комментарий">
-<button onclick="save()">Сохранить</button>
+  <h3>Добавить запись</h3>
+  <select id="type"></select>
+  <input id="amount" type="number" placeholder="Сумма">
+  <select id="category"></select>
+  <input id="comment" type="text" placeholder="Комментарий">
+  <button onclick="save()">Сохранить</button>
 </div>
 
 <div class="card">
-<h3>Фильтр по месяцу</h3>
-<select id="filterMonth"></select>
-<select id="filterYear"></select>
-<button onclick="loadReport()">Применить</button>
+  <h3>Фильтр по месяцу</h3>
+  <select id="filterMonth"></select>
+  <select id="filterYear"></select>
+  <button onclick="loadReport()">Применить</button>
 </div>
 
 <div class="card">
-<h3>Отчет за месяц</h3>
-<div>Доход: <span id="totalIncome">0</span> | Расход: <span id="totalExpense">0</span></div>
-<canvas id="expenseChart" width="400" height="200"></canvas>
+  <h3>Отчет за месяц</h3>
+  <div>Доход: <span id="totalIncome">0</span> | Расход: <span id="totalExpense">0</span></div>
+  <canvas id="expenseChart" width="400" height="200"></canvas>
 </div>
 
 <div class="card">
-<h3>Последние операции</h3>
-<div id="operationsList"></div>
+  <h3>Последние операции</h3>
+  <div id="operationsList"></div>
 </div>
 
 <script>
 const tg = window.Telegram.WebApp;
 tg.expand();
-const user = tg.initDataUnsafe?.user || {id:0};
+const user = tg.initDataUnsafe?.user || { id: 0 };
 
-/* 🔴 ВСТАВЬ СВОЙ URL Web App */
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbxzAGKzUAfh--yeQE88wAioSo-4ALt9see35SBViSGjWjYTJX-Yw-ciQDhyQGyxAEJBSg/exec";
+/* 🔴 ВСТАВЬ СВОЙ WEB APP URL */
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbwVNOGJLcXFUwirSXB_rkxL81n1OTrpHQSwfDcg17NXrVvlOTA4AaUo9pTitqVno7Gweg/exec";
 
 /* Категории */
-const categories={income:["Зарплата","Подработка","Подарки","Прочее"],expense:["Продукты","Жильё","Транспорт","Дети","Здоровье","Развлечения","Одежда","Прочее"]};
-function updateCategories(){const type=document.getElementById("type").value;const select=document.getElementById("category");select.innerHTML="";categories[type].forEach(cat=>{const option=document.createElement("option");option.value=cat;option.textContent=cat;select.appendChild(option);});}
-document.getElementById("type").addEventListener("change",updateCategories);
+const categories = {
+  income: ["Зарплата","Подработка","Подарки","Прочее"],
+  expense: ["Продукты","Жильё","Транспорт","Дети","Здоровье","Развлечения","Одежда","Прочее"]
+};
+
+function updateCategories() {
+  const type = document.getElementById("type").value;
+  const select = document.getElementById("category");
+  select.innerHTML = "";
+  categories[type].forEach(cat=>{
+    const option = document.createElement("option");
+    option.value = cat;
+    option.textContent = cat;
+    select.appendChild(option);
+  });
+}
+document.getElementById("type").addEventListener("change", updateCategories);
 updateCategories();
 
 /* Фильтр месяцев и годов */
-const monthSelect=document.getElementById("filterMonth");
-const yearSelect=document.getElementById("filterYear");
-const months=["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
-const currentMonth=new Date().getMonth();
-const currentYear=new Date().getFullYear();
+const monthSelect = document.getElementById("filterMonth");
+const yearSelect = document.getElementById("filterYear");
+const months = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
+const currentMonth = new Date().getMonth();
+const currentYear = new Date().getFullYear();
 months.forEach((m,i)=>monthSelect.options.add(new Option(m,i+1)));
-monthSelect.value=currentMonth+1;
-for(let y=currentYear-5;y<=currentYear+1;y++)yearSelect.options.add(new Option(y,y));
-yearSelect.value=currentYear;
+monthSelect.value = currentMonth+1;
+for(let y=currentYear-5; y<=currentYear+1; y++) yearSelect.options.add(new Option(y,y));
+yearSelect.value = currentYear;
 
 /* Сохранение */
-async function save(){
-  const data={type:document.getElementById("type").value,amount:document.getElementById("amount").value,category:document.getElementById("category").value,comment:document.getElementById("comment").value,user_id:user.id};
-  if(!data.amount){tg.showPopup({title:"Ошибка",message:"Введите сумму",buttons:[{type:"ok"}]});return;}
-  try{
-    await fetch(SHEET_URL,{method:"POST",body:JSON.stringify(data)});
-    document.getElementById("amount").value="";
-    document.getElementById("comment").value="";
-    tg.showPopup({title:"Готово ✅",message:"Запись успешно добавлена",buttons:[{type:"ok"}]});
+async function save() {
+  const data = {
+    type: document.getElementById("type").value,
+    amount: document.getElementById("amount").value,
+    category: document.getElementById("category").value,
+    comment: document.getElementById("comment").value,
+    user_id: user.id
+  };
+  if(!data.amount){
+    tg.showPopup({title:"Ошибка", message:"Введите сумму", buttons:[{type:"ok"}]});
+    return;
+  }
+  try {
+    await fetch(SHEET_URL,{method:"POST",mode:"no-cors",body:JSON.stringify(data)});
+    document.getElementById("amount").value = "";
+    document.getElementById("comment").value = "";
+    tg.showPopup({title:"Готово ✅", message:"Запись успешно добавлена", buttons:[{type:"ok"}]});
     loadReport();
-  }catch(e){console.error(e);tg.showPopup({title:"Ошибка ❌",message:"Не удалось сохранить запись",buttons:[{type:"ok"}]);}
+  } catch(e){
+    console.error(e);
+    tg.showPopup({title:"Ошибка ❌", message:"Не удалось сохранить запись", buttons:[{type:"ok"}]});
+  }
 }
 
 /* Загрузка отчета, графика и операций */
-async function loadReport(){
-  try{
-    const month=monthSelect.value;
-    const year=yearSelect.value;
-    const res=await fetch(`${SHEET_URL}?month=${month}&year=${year}`);
-    const data=await res.json();
-    document.getElementById("totalIncome").textContent=data.totalIncome.toFixed(2);
-    document.getElementById("totalExpense").textContent=data.totalExpense.toFixed(2);
+async function loadReport() {
+  try {
+    const month = monthSelect.value;
+    const year = yearSelect.value;
+    const res = await fetch(`${SHEET_URL}?month=${month}&year=${year}`);
+    const data = await res.json();
 
-    const ctx=document.getElementById('expenseChart').getContext('2d');
-    const labels=Object.keys(data.categorySums);
-    const values=Object.values(data.categorySums);
-    new Chart(ctx,{type:'pie',data:{labels,datasets:[{label:'Расходы',data:values,backgroundColor:['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40','#C9CBCF','#FF6666']}]},options:{responsive:true,plugins:{legend:{position:'bottom'}}}});
+    document.getElementById("totalIncome").textContent = data.totalIncome.toFixed(2);
+    document.getElementById("totalExpense").textContent = data.totalExpense.toFixed(2);
 
-    const operationsDiv=document.getElementById("operationsList");
-    operationsDiv.innerHTML="";
+    // График расходов
+    const ctx = document.getElementById('expenseChart').getContext('2d');
+    const labels = Object.keys(data.categorySums);
+    const values = Object.values(data.categorySums);
+    new Chart(ctx,{
+      type:'pie',
+      data:{ labels, datasets:[{label:'Расходы', data:values,
+        backgroundColor:['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40','#C9CBCF','#FF6666']}]},
+      options:{responsive:true, plugins:{legend:{position:'bottom'}}}
+    });
+
+    // Операции карточками
+    const operationsDiv = document.getElementById("operationsList");
+    operationsDiv.innerHTML = "";
     data.operations.reverse().forEach(op=>{
-      const div=document.createElement("div");
-      div.className="operation-card";
-      div.innerHTML=`<span>${op.date} | ${op.type}</span><span>${op.amount} | ${op.category}</span><span>${op.comment}</span>`;
+      const div = document.createElement("div");
+      div.className = "operation-card";
+      div.innerHTML = `<span>${op.date} | ${op.type}</span><span>${op.amount} | ${op.category}</span><span>${op.comment}</span>`;
       operationsDiv.appendChild(div);
     });
 
-  }catch(e){console.error(e);}
+  } catch(e){ console.error(e); }
 }
 
 loadReport();
 </script>
 </body>
 </html>
-
