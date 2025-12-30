@@ -2,8 +2,8 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Семейный Бюджет PRO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Family Budget Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -15,130 +15,202 @@
             --green: #27ae60; 
             --muted: #8e8e93; 
             --card-bg: #ffffff;
+            --tg-theme-bg-color: #ffffff;
         }
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { 
-            font-family: -apple-system, system-ui, sans-serif; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             background: var(--bg); 
             margin: 0; 
             padding-bottom: 100px; 
-            color: #333; 
+            color: #333;
+            overflow-x: hidden;
         }
 
-        /* Шапка и Баланс */
-        .header { padding: 20px; text-align: center; background: #fff; border-bottom: 1px solid #ddd; }
+        /* Header */
+        .header { 
+            padding: 15px 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background: #fff; 
+            position: sticky; top: 0; z-index: 100;
+            border-bottom: 1px solid #eee;
+        }
+        .header h1 { font-size: 1.1rem; margin: 0; color: var(--blue); text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Balance Card */
         .balance-card { 
             background: var(--blue); 
             color: white; 
             margin: 15px; 
-            padding: 20px; 
-            border-radius: 20px; 
+            padding: 25px; 
+            border-radius: 24px; 
             text-align: center; 
-            box-shadow: 0 4px 15px rgba(47,128,237,0.3);
+            box-shadow: 0 10px 20px rgba(47,128,237,0.2);
         }
+        .balance-label { font-size: 0.8rem; opacity: 0.8; margin-bottom: 5px; }
+        .balance-amount { font-size: 2.2rem; font-weight: 800; }
 
-        /* Карточки */
-        .card { background: var(--card-bg); margin: 15px; padding: 15px; border-radius: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .card h3 { margin-top: 0; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        /* Cards */
+        .card { background: var(--card-bg); margin: 15px; padding: 18px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
+        .card-title { font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
 
-        /* Прогресс бары */
-        .pb-bg { background: #eee; height: 10px; border-radius: 5px; margin: 10px 0; overflow: hidden; }
-        .pb-fill { height: 100%; background: var(--blue); transition: 0.5s; }
-
-        /* Элементы списков */
-        .row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f9f9f9; }
+        /* Lists */
+        .row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f5f5f5; }
         .row:last-child { border-bottom: none; }
-        
-        /* Кнопка Плюс */
+        .row-info { display: flex; flex-direction: column; }
+        .row-date { font-size: 0.7rem; color: var(--muted); }
+        .row-cat { font-weight: 600; font-size: 0.95rem; }
+        .row-comm { font-size: 0.8rem; color: var(--muted); }
+        .row-amt { font-weight: 700; font-size: 1rem; }
+
+        /* Progress Bars */
+        .pb-bg { background: #f0f0f0; height: 10px; border-radius: 5px; margin: 10px 0; overflow: hidden; }
+        .pb-fill { height: 100%; background: var(--blue); border-radius: 5px; transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        /* Floating Button */
         .fab { 
             position: fixed; bottom: 90px; right: 20px; 
-            width: 56px; height: 56px; 
+            width: 60px; height: 60px; 
             background: var(--blue); color: white; 
             border-radius: 50%; border: none; 
             display: flex; align-items: center; justify-content: center; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 10;
+            box-shadow: 0 6px 16px rgba(47,128,237,0.4); z-index: 1000;
+            cursor: pointer;
         }
 
-        /* Навигация */
+        /* Navigation */
         .nav { 
             position: fixed; bottom: 0; width: 100%; 
             display: flex; background: #fff; 
-            border-top: 1px solid #ddd; padding: 10px 0 25px; 
+            border-top: 1px solid #eee; padding: 10px 0 25px; 
+            z-index: 900;
         }
-        .nav-item { flex: 1; text-align: center; font-size: 11px; color: var(--muted); cursor: pointer; }
-        .nav-item.active { color: var(--blue); font-weight: bold; }
+        .nav-item { flex: 1; text-align: center; font-size: 10px; color: var(--muted); cursor: pointer; transition: 0.2s; }
+        .nav-item i { margin-bottom: 4px; }
+        .nav-item.active { color: var(--blue); }
 
-        /* Модалка */
+        /* Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 2000;
+            display: none; opacity: 0; transition: 0.3s;
+        }
         .modal { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: var(--bg); z-index: 1000; 
-            transform: translateY(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            position: fixed; bottom: 0; left: 0; width: 100%; 
+            background: #fff; z-index: 2001; 
+            border-radius: 25px 25px 0 0;
+            transform: translateY(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 25px;
         }
         .modal.open { transform: translateY(0); }
-        .input { width: 100%; padding: 15px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; }
+        .modal-overlay.open { display: block; opacity: 1; }
+        
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .input-group { margin-bottom: 15px; }
+        .input-label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 5px; margin-left: 5px; }
+        .input { 
+            width: 100%; padding: 14px; border: 1px solid #eee; 
+            border-radius: 14px; background: #f9f9f9; 
+            font-size: 1rem; outline: none;
+        }
+        .input:focus { border-color: var(--blue); }
+        
+        .btn-save { 
+            width: 100%; padding: 16px; background: var(--blue); 
+            color: white; border: none; border-radius: 14px; 
+            font-weight: 700; font-size: 1rem; margin-top: 10px;
+        }
 
-        .btn-pay { background: var(--green); color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; }
-        .status-paid { color: var(--green); font-weight: bold; font-size: 0.8rem; }
+        /* Installment Plan Specific */
+        .btn-pay { background: var(--green); color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 0.8rem; }
+        .status-paid { color: var(--green); font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; gap: 4px; }
     </style>
 </head>
 <body>
 
-    <div class="header"><h2 id="title" style="margin:0;">БЮДЖЕТ</h2></div>
+    <header class="header">
+        <h1>My Finance</h1>
+        <div id="date-display" style="font-weight: 600; font-size: 0.9rem;"></div>
+    </header>
 
     <div class="balance-card">
-        <div style="font-size: 0.8rem; opacity: 0.8;">Текущий остаток</div>
-        <div style="font-size: 2.2rem; font-weight: bold;"><span id="totalBalance">0.00</span> <small style="font-size: 1rem;">BYN</small></div>
+        <div class="balance-label">Доступный баланс</div>
+        <div class="balance-amount"><span id="totalBalance">0.00</span> <small style="font-size: 1rem;">BYN</small></div>
     </div>
 
     <div id="content"></div>
 
-    <button class="fab" onclick="toggleModal(true)"><i data-lucide="plus" size="32"></i></button>
+    <button class="fab" onclick="openModal()">
+        <i data-lucide="plus" size="32"></i>
+    </button>
 
     <nav class="nav">
-        <div class="nav-item active" id="tab-budget" onclick="switchTab('budget')"><i data-lucide="wallet"></i><div>Бюджет</div></div>
+        <div class="nav-item active" id="tab-budget" onclick="switchTab('budget')"><i data-lucide="layout-grid"></i><div>Бюджет</div></div>
         <div class="nav-item" id="tab-loans" onclick="switchTab('loans')"><i data-lucide="credit-card"></i><div>Рассрочки</div></div>
         <div class="nav-item" id="tab-savings" onclick="switchTab('savings')"><i data-lucide="piggy-bank"></i><div>Копилка</div></div>
     </nav>
 
+    <div id="modalOverlay" class="modal-overlay" onclick="closeModal()"></div>
     <div id="modal" class="modal">
-        <div style="padding: 20px; background: #fff; display: flex; justify-content: space-between; border-bottom: 1px solid #eee;">
-            <span onclick="toggleModal(false)" style="color: var(--red);">Отмена</span>
-            <b>Новая запись</b>
-            <span onclick="saveRecord()" style="color: var(--blue); font-weight: bold;">Готово</span>
+        <div class="modal-header">
+            <h2 style="margin:0; font-size: 1.2rem;">Новая операция</h2>
+            <i data-lucide="x" onclick="closeModal()" style="cursor:pointer"></i>
         </div>
-        <div style="padding: 20px;">
-            <select id="mType" class="input" onchange="toggleCategory()">
+        
+        <div class="input-group">
+            <span class="input-label">Тип</span>
+            <select id="mType" class="input">
                 <option value="expense">Расход</option>
                 <option value="income">Доход</option>
-                <option value="savings">В копилку</option>
             </select>
-            <input type="number" id="mAmount" class="input" placeholder="Сумма 0.00">
-            <select id="mCategory" class="input">
-                <option value="Продукты">Продукты</option>
-                <option value="Транспорт">Транспорт</option>
-                <option value="Развлечения">Развлечения</option>
-                <option value="Жилье">Жилье</option>
-            </select>
-            <input type="text" id="mComment" class="input" placeholder="Комментарий">
         </div>
+
+        <div class="input-group">
+            <span class="input-label">Сумма</span>
+            <input type="number" id="mAmount" class="input" placeholder="0.00" inputmode="decimal">
+        </div>
+
+        <div class="input-group">
+            <span class="input-label">Категория</span>
+            <select id="mCategory" class="input">
+                <option value="Продукты">🛒 Продукты</option>
+                <option value="Транспорт">🚗 Транспорт</option>
+                <option value="Жилье">🏠 Жилье</option>
+                <option value="Развлечения">🍿 Развлечения</option>
+                <option value="Здоровье">💊 Здоровье</option>
+                <option value="Другое">✨ Другое</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <span class="input-label">Комментарий</span>
+            <input type="text" id="mComment" class="input" placeholder="На что потратили?">
+        </div>
+
+        <button class="btn-save" onclick="saveRecord()">Сохранить</button>
     </div>
 
 <script>
-    const SHEET_URL = "https://script.google.com/macros/s/AKfycbzZ7Y6sCtukVVU05qm4geKSwvwg4_alU93KTpvAURt_MB-OlMDvhOjb1CU5saeA6gDFLg/exec"; // <--- ЗАМЕНИТЬ НА СВОЙ
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbzZ7Y6sCtukVVU05qm4geKSwvwg4_alU93KTpvAURt_MB-OlMDvhOjb1CU5saeA6gDFLg/exec"; // <--- ОБЯЗАТЕЛЬНО ВСТАВЬТЕ СВОЙ URL
     let currentTab = 'budget';
     let myChart = null;
+
+    // Отображение текущего месяца
+    const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+    document.getElementById('date-display').textContent = monthNames[new Date().getMonth()];
 
     async function switchTab(tab) {
         currentTab = tab;
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
         document.getElementById('tab-' + tab).classList.add('active');
-        document.getElementById('title').textContent = tab.toUpperCase();
         loadData();
     }
 
     async function loadData() {
         const cont = document.getElementById('content');
-        cont.innerHTML = '<p style="text-align:center; margin-top:20px;">Загрузка данных...</p>';
+        cont.innerHTML = '<div style="text-align:center; padding:40px; color:var(--muted);">Загрузка...</div>';
         
         try {
             const action = currentTab === 'budget' ? '' : '?action=get' + currentTab.charAt(0).toUpperCase() + currentTab.slice(1);
@@ -149,94 +221,151 @@
             else if (currentTab === 'loans') renderLoans(data);
             else if (currentTab === 'savings') renderSavings(data);
         } catch (e) {
-            cont.innerHTML = '<p style="color:red; text-align:center;">Ошибка подключения к таблице</p>';
+            cont.innerHTML = '<div class="card" style="color:red; text-align:center;">Ошибка обновления. Проверьте соединение.</div>';
         }
         lucide.createIcons();
     }
 
     function renderBudget(data) {
         document.getElementById('totalBalance').textContent = (data.totalIncome - data.totalExpense).toFixed(2);
-        let html = `<div class="card"><canvas id="myChart" height="200"></canvas></div><div class="card"><h3>История</h3>`;
-        data.operations.reverse().forEach(op => {
-            html += `<div class="row">
-                <div><small style="color:gray;">${op.date}</small><br><b>${op.category}</b></div>
-                <div style="font-weight:bold; color:${op.type==='income'?'var(--green)':'var(--red)'}">${op.type==='income'?'+':'-'}${op.amount.toFixed(2)}</div>
-            </div>`;
-        });
+        
+        let html = `
+            <div class="card">
+                <canvas id="budgetChart" height="180"></canvas>
+            </div>
+            <div class="card">
+                <div class="card-title"><i data-lucide="list"></i> Последние операции</div>
+        `;
+        
+        if (data.operations.length === 0) {
+            html += '<p style="color:var(--muted); text-align:center;">Нет записей за этот месяц</p>';
+        } else {
+            data.operations.slice().reverse().forEach(op => {
+                const isInc = op.type === 'income';
+                html += `
+                    <div class="row">
+                        <div class="row-info">
+                            <span class="row-date">${op.date}</span>
+                            <span class="row-cat">${op.category}</span>
+                            <span class="row-comm">${op.comment || ''}</span>
+                        </div>
+                        <div class="row-amt" style="color:${isInc ? 'var(--green)' : 'var(--red)'}">
+                            ${isInc ? '+' : '-'}${op.amount.toFixed(2)}
+                        </div>
+                    </div>
+                `;
+            });
+        }
         document.getElementById('content').innerHTML = html + '</div>';
         
-        const ctx = document.getElementById('myChart').getContext('2d');
+        // Рендер графика
+        const ctx = document.getElementById('budgetChart').getContext('2d');
         if(myChart) myChart.destroy();
         myChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels: Object.keys(data.categorySums),
-                datasets: [{ data: Object.values(data.categorySums), backgroundColor: ['#2f80ed', '#27ae60', '#f2994a', '#eb5757', '#9b51e0'] }]
+                datasets: [{ 
+                    data: Object.values(data.categorySums), 
+                    backgroundColor: ['#2f80ed', '#27ae60', '#f2994a', '#eb5757', '#9b51e0', '#2d9cdb'] 
+                }]
             },
-            options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } }
+            options: { cutout: '70%', plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } } }
         });
     }
 
     function renderLoans(data) {
-        let html = '<h3>Активные рассрочки</h3>';
+        let html = '<div class="card"><div class="card-title"><i data-lucide="landmark"></i> Рассрочки</div>';
+        if (data.length === 0) html += '<p style="text-align:center; color:var(--muted);">Нет активных рассрочек</p>';
+        
         data.forEach(l => {
             const p = Math.round(((l.total - l.balance) / l.total) * 100);
-            html += `<div class="card" onclick="openPlan('${l.id}', '${l.name}')" style="cursor:pointer">
-                <div style="display:flex; justify-content:space-between"><b>${l.name}</b> <span>${p}%</span></div>
-                <div class="pb-bg"><div class="pb-fill" style="width:${p}%;"></div></div>
-                <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--muted);">
-                    <span>Остаток: ${l.balance} BYN</span><span>График ></span>
+            html += `
+                <div style="margin-bottom:20px; cursor:pointer;" onclick="openPlan('${l.id}', '${l.name}')">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                        <span style="font-weight:600;">${l.name}</span>
+                        <span style="color:var(--blue); font-weight:700;">${p}%</span>
+                    </div>
+                    <div class="pb-bg"><div class="pb-fill" style="width:${p}%;"></div></div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--muted);">
+                        <span>Остаток: ${l.balance.toFixed(2)} BYN</span>
+                        <span>Всего: ${l.total}</span>
+                    </div>
                 </div>
-            </div>`;
+            `;
         });
-        document.getElementById('content').innerHTML = html || '<p style="text-align:center;">Рассрочек нет</p>';
+        document.getElementById('content').innerHTML = html + '</div>';
     }
 
     async function openPlan(id, name) {
         const cont = document.getElementById('content');
-        cont.innerHTML = `<p style="text-align:center;">Загрузка графика для ${name}...</p>`;
+        cont.innerHTML = '<div style="text-align:center; padding:40px;">Загрузка графика...</div>';
+        
         const res = await fetch(`${SHEET_URL}?action=getInstallmentPlan&loanId=${id}`);
         const plan = await res.json();
         
-        let html = `<div class="card"><h3>График: ${name}</h3>`;
+        let html = `<div class="card"><div class="card-title"><i data-lucide="calendar"></i> ${name}</div>`;
         plan.forEach(p => {
-            html += `<div class="row">
-                <div><b>${p.date}</b><br><small>${p.amount} BYN</small></div>
-                <div>${p.status === 'paid' ? '<span class="status-paid">ОПЛАЧЕНО</span>' : 
-                `<button class="btn-pay" onclick="pay('${id}', '${p.date}', this)">Оплатить</button>`}</div>
-            </div>`;
+            const isPaid = p.status === 'paid';
+            html += `
+                <div class="row">
+                    <div>
+                        <div style="font-weight:600;">${p.date}</div>
+                        <div style="font-size:0.8rem; color:var(--muted);">${p.amount} BYN</div>
+                    </div>
+                    <div>
+                        ${isPaid ? '<span class="status-paid"><i data-lucide="check-circle" size="14"></i> Оплачено</span>' : 
+                        `<button class="btn-pay" onclick="pay('${id}', '${p.date}', this)">Оплатить</button>`}
+                    </div>
+                </div>
+            `;
         });
-        cont.innerHTML = html + `<button onclick="switchTab('loans')" style="width:100%; margin-top:15px; padding:12px; border:none; border-radius:10px; background:#eee;">← Назад</button></div>`;
+        cont.innerHTML = html + `<button onclick="switchTab('loans')" style="width:100%; margin-top:20px; padding:12px; border:none; border-radius:12px; background:#f0f0f0; font-weight:600;">← Назад</button></div>`;
+        lucide.createIcons();
     }
 
     async function pay(id, date, btn) {
-        if (!confirm("Подтвердить оплату?")) return;
+        if (!confirm("Подтвердить платеж?")) return;
         btn.disabled = true; btn.textContent = "...";
         await fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'markPaid', loanId: id, date: date }) });
-        alert("Оплачено!");
         openPlan(id, "Обновление...");
     }
 
     function renderSavings(data) {
-        let html = '<h3>Мои накопления</h3>';
+        let html = '<div class="card"><div class="card-title"><i data-lucide="piggy-bank"></i> Мои цели</div>';
         data.forEach(s => {
             const p = Math.round((s.current / s.target) * 100);
-            html += `<div class="card">
-                <div style="display:flex; justify-content:space-between"><b>${s.name}</b> <span>${p}%</span></div>
-                <div class="pb-bg"><div class="pb-fill" style="width:${p}%; background:var(--green);"></div></div>
-                <div style="display:flex; justify-content:space-between; font-size:0.8rem;">
-                    <span>${s.current} BYN</span><span>Цель: ${s.target}</span>
+            html += `
+                <div style="margin-bottom:20px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                        <span style="font-weight:600;">${s.name}</span>
+                        <span style="font-weight:700; color:var(--green);">${p}%</span>
+                    </div>
+                    <div class="pb-bg"><div class="pb-fill" style="width:${p}%; background:var(--green);"></div></div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--muted);">
+                        <span>Накоплено: ${s.current}</span>
+                        <span>Цель: ${s.target} BYN</span>
+                    </div>
                 </div>
-            </div>`;
+            `;
         });
-        document.getElementById('content').innerHTML = html;
+        document.getElementById('content').innerHTML = html + '</div>';
     }
 
-    function toggleModal(show) { document.getElementById('modal').classList.toggle('open', show); }
+    // Modal Logic
+    function openModal() {
+        document.getElementById('modalOverlay').classList.add('open');
+        document.getElementById('modal').classList.add('open');
+    }
+    function closeModal() {
+        document.getElementById('modalOverlay').classList.remove('open');
+        document.getElementById('modal').classList.remove('open');
+    }
 
     async function saveRecord() {
         const amt = document.getElementById('mAmount').value;
-        if(!amt) return;
+        if (!amt) return alert("Введите сумму");
+        
         const data = {
             action: 'addTransaction',
             type: document.getElementById('mType').value,
@@ -245,13 +374,29 @@
             comment: document.getElementById('mComment').value,
             user_id: window.Telegram.WebApp.initDataUnsafe?.user?.id || 'guest'
         };
-        toggleModal(false);
+
+        closeModal();
+        // Очистка полей
+        document.getElementById('mAmount').value = '';
+        document.getElementById('mComment').value = '';
+
         await fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+        
+        // Вибрация Telegram
+        if (window.Telegram.WebApp.HapticFeedback) {
+            window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        }
+        
         loadData();
     }
 
+    // Start
     lucide.createIcons();
     loadData();
+    
+    // Информируем Telegram, что приложение готово
+    window.Telegram.WebApp.ready();
+    window.Telegram.WebApp.expand();
 </script>
 </body>
 </html>
