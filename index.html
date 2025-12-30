@@ -192,9 +192,25 @@
     }
 
     function renderBudget(data) {
-        document.getElementById('totalBalance').textContent = (data.totalIncome - data.totalExpense).toFixed(2);
-        let html = '<div class="card animate__animated animate__fadeInUp"><h3>Транзакции</h3>';
-        
+    // 1. Обновляем баланс в верхней карточке
+    document.getElementById('totalBalance').textContent = (data.totalIncome - data.totalExpense).toFixed(2);
+    
+    let html = '';
+
+    // 2. ДОБАВЛЯЕМ БЛОК С ДИАГРАММОЙ (только если есть расходы)
+    if (data.totalExpense > 0) {
+        html += `
+            <div class="card animate__animated animate__fadeIn" style="padding: 15px;">
+                <canvas id="expenseChart" style="max-height: 200px;"></canvas>
+            </div>`;
+    }
+
+    // 3. ДОБАВЛЯЕМ БЛОК ТРАНЗАКЦИЙ
+    html += '<div class="card animate__animated animate__fadeInUp"><h3>Транзакции</h3>';
+    
+    if (data.operations.length === 0) {
+        html += '<div style="text-align:center; color:var(--secondary); padding:20px;">Нет операций за этот месяц</div>';
+    } else {
         data.operations.slice().reverse().forEach(op => {
             html += `
                 <div class="history-item">
@@ -208,8 +224,46 @@
                     </div>
                 </div>`;
         });
-        document.getElementById('app-content').innerHTML = html + '</div>';
     }
+    html += '</div>';
+
+    // Рендерим накопленный HTML в основной контейнер приложения
+    document.getElementById('app-content').innerHTML = html;
+
+    // 4. ИНИЦИАЛИЗАЦИЯ ДИАГРАММЫ (выполняется после того, как canvas появился в DOM)
+    if (data.totalExpense > 0) {
+        const ctx = document.getElementById('expenseChart').getContext('2d');
+        const categories = Object.keys(data.categorySums);
+        const amounts = Object.values(data.categorySums);
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: categories,
+                datasets: [{
+                    data: amounts,
+                    backgroundColor: [
+                        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#8BC34A'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            usePointStyle: true,
+                            font: { size: 11 }
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
 
     function renderLoans(data) {
         let html = '<div class="animate__animated animate__fadeInUp">';
@@ -296,3 +350,4 @@
 </script>
 </body>
 </html>
+
