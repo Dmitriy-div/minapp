@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Finance Flow</title>
+    <title>Finance Flow Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -20,89 +20,48 @@
             --radius: 24px;
         }
 
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
             padding-bottom: 100px;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* Анимированные карточки */
-        .card {
-            background: var(--card);
-            margin: 16px;
-            padding: 20px;
-            border-radius: var(--radius);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.04);
-            border: 1px solid rgba(0,0,0,0.02);
         }
 
         .balance-header {
             background: linear-gradient(135deg, #007aff 0%, #0056b3 100%);
             color: white;
             margin: 16px;
-            padding: 30px 20px;
+            padding: 25px 20px;
             border-radius: var(--radius);
             text-align: center;
-            box-shadow: 0 12px 30px rgba(0,122,255,0.3);
+            box-shadow: 0 12px 30px rgba(0,122,255,0.2);
         }
 
-        /* Навигация как в iOS */
-        .nav-bar {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            background: rgba(255,255,255,0.85);
-            backdrop-filter: blur(20px);
+        .card {
+            background: var(--card);
+            margin: 16px;
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+        }
+
+        /* ИСТОРИЯ ТРАНЗАКЦИЙ (ВАШ ЗАПРОС) */
+        .history-item {
             display: flex;
-            padding: 12px 0 30px;
-            border-top: 0.5px solid rgba(0,0,0,0.1);
-            z-index: 1000;
-        }
-
-        .nav-item {
-            flex: 1;
-            text-align: center;
-            color: var(--secondary);
-            font-size: 10px;
-            transition: 0.3s;
-        }
-
-        .nav-item.active { color: var(--accent); transform: scale(1.1); }
-
-        /* Современная кнопка Добавить */
-        .add-btn {
-            position: fixed;
-            bottom: 100px;
-            right: 20px;
-            width: 64px;
-            height: 64px;
-            background: var(--accent);
-            color: white;
-            border-radius: 50%;
-            display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            box-shadow: 0 8px 25px rgba(0,122,255,0.4);
-            border: 4px solid white;
-            z-index: 999;
-            cursor: pointer;
+            padding: 12px 0;
+            border-bottom: 0.5px solid #f2f2f7;
         }
+        .history-date { font-size: 11px; color: var(--secondary); margin-bottom: 2px; }
+        .history-cat { font-weight: 700; font-size: 15px; display: block; }
+        .history-comm { font-size: 13px; color: var(--secondary); margin-top: 1px; }
+        .history-amt { font-weight: 800; font-size: 16px; }
 
-        /* Поля ввода */
-        .input-pill {
-            width: 100%;
-            background: #f2f2f7;
-            border: none;
-            padding: 16px;
-            border-radius: 16px;
-            margin-bottom: 12px;
-            font-size: 16px;
-            outline: none;
-        }
-
+        /* МОДАЛЬНОЕ МЕНЮ (ИСПРАВЛЕННЫЙ ВЫЕЗД) */
         .modal-sheet {
             position: fixed;
             bottom: 0;
@@ -110,13 +69,13 @@
             width: 100%;
             background: white;
             border-radius: 30px 30px 0 0;
-            padding: 30px 20px;
+            padding: 20px 20px 40px;
             transform: translateY(100%);
-            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 2000;
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
+            max-height: 90vh; /* Чтобы не уходило за экран */
+            overflow-y: auto;
         }
-
         .modal-sheet.active { transform: translateY(0); }
 
         .overlay {
@@ -125,27 +84,53 @@
         }
         .overlay.active { opacity:1; pointer-events:auto; }
 
-        /* Прогресс-бары */
-        .progress-container { background: #f2f2f7; height: 8px; border-radius: 4px; overflow: hidden; margin: 12px 0; }
-        .progress-bar { height: 100%; background: var(--accent); border-radius: 4px; transition: 1s ease-out; }
-
-        .status-paid-badge {
-            background: #e8f5e9; color: var(--green);
-            padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700;
+        .input-pill {
+            width: 100%;
+            background: #f2f2f7;
+            border: 2px solid transparent;
+            padding: 14px;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            font-size: 16px;
+            outline: none;
+            color: var(--text);
         }
+        .input-pill:focus { border-color: var(--accent); background: #fff; }
+
+        .nav-bar {
+            position: fixed; bottom: 0; width: 100%;
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(20px);
+            display: flex; padding: 10px 0 25px;
+            border-top: 0.5px solid rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        .nav-item { flex: 1; text-align: center; color: var(--secondary); font-size: 10px; }
+        .nav-item.active { color: var(--accent); }
+
+        .add-btn {
+            position: fixed; bottom: 85px; right: 20px;
+            width: 60px; height: 60px;
+            background: var(--accent); color: white;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 8px 25px rgba(0,122,255,0.4); z-index: 999;
+        }
+
+        .progress-container { background: #f2f2f7; height: 8px; border-radius: 4px; overflow: hidden; margin: 10px 0; }
+        .progress-bar { height: 100%; background: var(--accent); transition: 0.8s; }
     </style>
 </head>
 <body>
 
-    <div class="balance-header animate__animated animate__fadeInDown">
-        <div style="font-size: 13px; opacity: 0.8; margin-bottom: 8px;">Мои средства</div>
-        <div style="font-size: 32px; font-weight: 800;"><span id="totalBalance">0.00</span> BYN</div>
+    <div class="balance-header animate__animated animate__fadeIn">
+        <div style="font-size: 13px; opacity: 0.8;">Доступно</div>
+        <div style="font-size: 30px; font-weight: 800;"><span id="totalBalance">0.00</span> BYN</div>
     </div>
 
     <div id="app-content"></div>
 
     <div class="add-btn" onclick="openActionModal()">
-        <i data-lucide="plus" size="32"></i>
+        <i data-lucide="plus"></i>
     </div>
 
     <nav class="nav-bar">
@@ -156,13 +141,13 @@
 
     <div id="overlay" class="overlay" onclick="closeActionModal()"></div>
     <div id="actionModal" class="modal-sheet">
-        <div style="width: 40px; height: 5px; background: #ddd; border-radius: 3px; margin: 0 auto 20px;"></div>
-        <h3 style="margin-bottom: 20px;">Новая операция</h3>
+        <div style="width: 40px; height: 4px; background: #e5e5ea; border-radius: 2px; margin: 0 auto 15px;"></div>
+        <h3 style="margin: 0 0 20px 5px;">Новая операция</h3>
         
         <select id="mType" class="input-pill" onchange="updateCategories()">
-            <option value="expense">Расход</option>
-            <option value="income">Доход</option>
-            <option value="savings">В копилку</option>
+            <option value="expense">📉 Расход</option>
+            <option value="income">📈 Доход</option>
+            <option value="savings">🎯 В копилку</option>
         </select>
         
         <input type="number" id="mAmount" class="input-pill" placeholder="Сумма" inputmode="decimal">
@@ -172,8 +157,8 @@
         
         <input type="text" id="mComment" class="input-pill" placeholder="Комментарий">
         
-        <button onclick="saveOperation()" style="width:100%; background: var(--accent); color: white; border: none; padding: 18px; border-radius: 18px; font-weight: 700; font-size: 16px;">
-            Подтвердить
+        <button onclick="saveOperation()" style="width:100%; background: var(--accent); color: white; border: none; padding: 16px; border-radius: 18px; font-weight: 700; font-size: 16px; margin-top: 10px;">
+            Сохранить
         </button>
     </div>
 
@@ -191,33 +176,36 @@
 
     async function loadData() {
         const cont = document.getElementById('app-content');
-        cont.innerHTML = '<div style="text-align:center; padding:50px; opacity:0.5;">Загрузка...</div>';
-        
+        cont.innerHTML = '<div style="text-align:center; padding:50px; opacity:0.3;">Обновление...</div>';
         try {
             const action = currentTab === 'budget' ? '' : '?action=get' + currentTab.charAt(0).toUpperCase() + currentTab.slice(1);
             const res = await fetch(SHEET_URL + action);
             const data = await res.json();
-
             if (currentTab === 'budget') renderBudget(data);
             else if (currentTab === 'loans') renderLoans(data);
             else if (currentTab === 'savings') {
                 savingsGoals = data.map(s => s.name);
                 renderSavings(data);
             }
-        } catch (e) {
-            cont.innerHTML = '<div style="padding:20px; color:red;">Ошибка. Проверьте соединение.</div>';
-        }
+        } catch (e) { cont.innerHTML = '<div style="padding:20px; color:red;">Ошибка данных</div>'; }
         lucide.createIcons();
     }
 
     function renderBudget(data) {
         document.getElementById('totalBalance').textContent = (data.totalIncome - data.totalExpense).toFixed(2);
-        let html = '<div class="card animate__animated animate__fadeInUp"><h3>История транзакций</h3>';
-        data.operations.slice(-10).reverse().forEach(op => {
+        let html = '<div class="card animate__animated animate__fadeInUp"><h3>Транзакции</h3>';
+        
+        data.operations.slice().reverse().forEach(op => {
             html += `
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:0.5px solid #eee;">
-                    <div><div style="font-weight:600; font-size:14px;">${op.category}</div><div style="font-size:11px; color:#888;">${op.date}</div></div>
-                    <div style="font-weight:700; color:${op.type==='income'?'var(--green)':'var(--red)'}">${op.type==='income'?'+':'-'}${op.amount}</div>
+                <div class="history-item">
+                    <div style="flex: 1;">
+                        <span class="history-date">${op.date}</span>
+                        <b class="history-cat">${op.category}</b>
+                        <div class="history-comm">${op.comment || '—'}</div>
+                    </div>
+                    <div class="history-amt" style="color:${op.type==='income'?'var(--green)':'var(--red)'}">
+                        ${op.type==='income'?'+':'-'}${op.amount.toFixed(2)}
+                    </div>
                 </div>`;
         });
         document.getElementById('app-content').innerHTML = html + '</div>';
@@ -226,53 +214,47 @@
     function renderLoans(data) {
         let html = '<div class="animate__animated animate__fadeInUp">';
         data.forEach(l => {
-            const p = Math.min(100, Math.round(((l.total - l.balance) / l.total) * 100));
-            html += `
-                <div class="card" onclick="openLoanPlan('${l.id}', '${l.name}')">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><b>${l.name}</b> <span>${p}%</span></div>
-                    <div class="progress-container"><div class="progress-bar" style="width:${p}%"></div></div>
-                    <div style="display:flex; justify-content:space-between; font-size:12px; color:#888;">
-                        <span>Остаток: ${l.balance} BYN</span><span>График ></span>
-                    </div>
-                </div>`;
+            const p = Math.round(((l.total - l.balance) / l.total) * 100);
+            html += `<div class="card" onclick="openLoanPlan('${l.id}','${l.name}')">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><b>${l.name}</b> <span>${p}%</span></div>
+                <div class="progress-container"><div class="progress-bar" style="width:${p}%"></div></div>
+                <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--secondary);">
+                    <span>Остаток: ${l.balance}</span><span>План ></span>
+                </div>
+            </div>`;
         });
         document.getElementById('app-content').innerHTML = html + '</div>';
-    }
-
-    async function openLoanPlan(id, name) {
-        const res = await fetch(`${SHEET_URL}?action=getInstallmentPlan&loanId=${id}`);
-        const plan = await res.json();
-        let html = `<div class="card animate__animated animate__zoomIn"><h3>${name}</h3>`;
-        plan.forEach(p => {
-            const isPaid = p.status === 'paid';
-            html += `
-                <div style="display:flex; justify-content:space-between; padding:15px 0; border-bottom:0.5px solid #eee;">
-                    <div><div style="font-weight:600;">${p.date}</div><div style="font-size:12px;">${p.amount} BYN</div></div>
-                    <div>${isPaid ? '<span class="status-paid-badge">ОПЛАЧЕНО</span>' : 
-                    `<button onclick="payInstallment('${id}','${p.date}')" style="background:var(--accent); color:white; border:none; padding:8px 15px; border-radius:10px; font-size:12px;">Оплатить</button>`}</div>
-                </div>`;
-        });
-        document.getElementById('app-content').innerHTML = html + `<button onclick="switchTab('loans', document.querySelectorAll('.nav-item')[1])" style="width:100%; margin-top:20px; border:none; background:none; color:var(--accent); font-weight:600;">← Назад к списку</button></div>`;
-        lucide.createIcons();
     }
 
     function renderSavings(data) {
         let html = '<div class="animate__animated animate__fadeInUp">';
         data.forEach(s => {
             const p = Math.round((s.current / s.target) * 100);
-            html += `
-                <div class="card">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><b>${s.name}</b> <span>${p}%</span></div>
-                    <div class="progress-container"><div class="progress-bar" style="width:${p}%; background:var(--green)"></div></div>
-                    <div style="display:flex; justify-content:space-between; font-size:12px; color:#888;">
-                        <span>Накоплено: ${s.current} BYN</span><span>Цель: ${s.target}</span>
-                    </div>
-                </div>`;
+            html += `<div class="card">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><b>${s.name}</b> <span>${p}%</span></div>
+                <div class="progress-container"><div class="progress-bar" style="width:${p}%; background:var(--green)"></div></div>
+                <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--secondary);">
+                    <span>Накоплено: ${s.current}</span><span>Цель: ${s.target}</span>
+                </div>
+            </div>`;
         });
         document.getElementById('app-content').innerHTML = html + '</div>';
     }
 
-    // Modal & Operations
+    function updateCategories() {
+        const type = document.getElementById('mType').value;
+        const catSelect = document.getElementById('mCategory');
+        catSelect.innerHTML = '';
+        
+        if (type === 'income') {
+            ['Зарплата', 'Colour Wood', 'Подарки', 'Другое'].forEach(c => catSelect.innerHTML += `<option value="${c}">${c}</option>`);
+        } else if (type === 'savings') {
+            savingsGoals.forEach(g => catSelect.innerHTML += `<option value="${g}">${g}</option>`);
+        } else {
+            ['Продукты', 'Транспорт', 'Жилье', 'Развлечения', 'Здоровье', 'Другое'].forEach(c => catSelect.innerHTML += `<option value="${c}">${c}</option>`);
+        }
+    }
+
     function openActionModal() {
         document.getElementById('overlay').classList.add('active');
         document.getElementById('actionModal').classList.add('active');
@@ -284,24 +266,9 @@
         document.getElementById('actionModal').classList.remove('active');
     }
 
-    function updateCategories() {
-        const type = document.getElementById('mType').value;
-        const catSelect = document.getElementById('mCategory');
-        catSelect.innerHTML = '';
-        
-        if (type === 'savings') {
-            savingsGoals.forEach(g => catSelect.innerHTML += `<option value="${g}">${g}</option>`);
-        } else {
-            ['🛒 Продукты', '🚗 Транспорт', '🏠 Жилье', '🍿 Отдых', '💊 Здоровье', '✨ Другое'].forEach(c => {
-                catSelect.innerHTML += `<option value="${c}">${c}</option>`;
-            });
-        }
-    }
-
     async function saveOperation() {
         const amt = document.getElementById('mAmount').value;
         if (!amt) return;
-
         const data = {
             type: document.getElementById('mType').value,
             amount: amt,
@@ -309,21 +276,12 @@
             comment: document.getElementById('mComment').value,
             user_id: window.Telegram.WebApp.initDataUnsafe?.user?.id || 'user'
         };
-
         closeActionModal();
-        if (window.Telegram.WebApp.HapticFeedback) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-        
+        if (window.Telegram.WebApp.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
         await fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
         loadData();
     }
 
-    async function payInstallment(id, date) {
-        if (!confirm("Подтвердить оплату?")) return;
-        await fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'markPaid', loanId: id, date: date }) });
-        loadData();
-    }
-
-    // Сначала загружаем цели копилки, чтобы они были в модалке
     async function init() {
         try {
             const res = await fetch(SHEET_URL + '?action=getSavings');
@@ -334,7 +292,6 @@
         lucide.createIcons();
         window.Telegram.WebApp.expand();
     }
-
     init();
 </script>
 </body>
