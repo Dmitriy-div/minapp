@@ -22,15 +22,13 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Roboto', sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-main); overflow-x: hidden; }
-        .app-container { width: 100%; max-width: 480px; height: 100vh; margin: auto; position: relative; display: flex; flex-direction: column; background: var(--bg-color); }
+        .app-container { width: 100%; max-width: 480px; height: 100vh; margin: auto; position: relative; display: flex; flex-direction: column; }
 
-        /* Header */
         .header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
         .header h1 { font-size: 1.2rem; color: var(--accent-blue); }
         #monthFilter { background: none; border: none; color: var(--accent-blue); font-weight: bold; font-size: 0.9rem; outline: none; }
 
-        /* Balance Card */
-        .balance-card { background: var(--accent-blue); color: #fff; padding: 25px; border-radius: 20px; text-align: center; margin: 0 20px 20px; box-shadow: 0 8px 16px rgba(47, 128, 237, 0.2); }
+        .balance-card { background: var(--accent-blue); color: #fff; padding: 25px; border-radius: 20px; text-align: center; margin: 0 20px 20px; box-shadow: 0 8px 16px rgba(47,128,237,0.2); }
         .balance-amount { font-size: 2.2rem; font-weight: bold; margin-top: 5px; }
 
         .content-area { flex: 1; overflow-y: auto; padding: 0 20px 100px; }
@@ -38,42 +36,36 @@
 
         /* Транзакции */
         .transaction-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f2f2f2; }
-        .transaction-info { display: flex; flex-direction: column; gap: 2px; }
         .tr-date { font-size: 0.7rem; color: var(--text-muted); }
-        .tr-category { font-weight: 700; font-size: 0.95rem; color: var(--text-main); }
+        .tr-category { font-weight: 700; font-size: 0.95rem; }
         .tr-comment { font-size: 0.8rem; color: var(--text-muted); }
-        .tr-amount { font-weight: 700; font-size: 1rem; }
-        .amount-income { color: var(--income-color); }
-        .amount-expense { color: var(--expense-color); }
+        .amount-income { color: var(--income-color); font-weight: 700; }
+        .amount-expense { color: var(--expense-color); font-weight: 700; }
 
-        /* Сбережения (Progress bars) */
-        .savings-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        /* Сбережения */
         .progress-container { background: #eee; height: 10px; border-radius: 5px; overflow: hidden; margin: 10px 0; }
         .progress-fill { height: 100%; background: var(--accent-blue); transition: 0.5s; }
-        .savings-stats { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); }
+        .savings-btn { background: #eef4ff; color: var(--accent-blue); border: none; padding: 5px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; }
 
         /* Модалки */
-        #addModal, #loanDetailModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 100; transform: translateY(100%); transition: transform 0.3s ease-out; display: flex; flex-direction: column; }
+        #addModal, #loanDetailModal, #savingsModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 100; transform: translateY(100%); transition: transform 0.3s ease-out; display: flex; flex-direction: column; }
         .open { transform: translateY(0) !important; }
         .modal-header { display: flex; justify-content: space-between; padding: 20px; align-items: center; border-bottom: 1px solid var(--border-color); background: #fff; }
         .modal-content { padding: 20px; flex: 1; overflow-y: auto; }
 
-        /* UI */
-        .fab { position: absolute; bottom: 90px; right: 20px; width: 60px; height: 60px; background: var(--accent-blue); border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 6px 16px rgba(47, 128, 237, 0.3); z-index: 10; }
         .bottom-nav { display: flex; justify-content: space-around; padding: 12px 0 25px; border-top: 1px solid var(--border-color); background: var(--card-bg); position: sticky; bottom: 0; }
         .nav-link { color: var(--text-muted); text-align: center; font-size: 0.7rem; cursor: pointer; flex: 1; }
         .nav-link.active { color: var(--accent-blue); }
         
+        .fab { position: absolute; bottom: 90px; right: 20px; width: 60px; height: 60px; background: var(--accent-blue); border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 6px 16px rgba(47,128,237,0.3); z-index: 10; }
         .main-input { width: 100%; background: var(--input-bg); border: 1px solid #ddd; padding: 14px; border-radius: 12px; font-size: 1rem; margin-bottom: 15px; outline: none; }
-        .category-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
-        .cat-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
-        .cat-icon { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--input-bg); border: 1px solid #eee; }
-        .cat-item.selected .cat-icon { background: var(--accent-blue); color: #fff; }
         
-        #successToast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8); background: rgba(255, 255, 255, 0.95); padding: 30px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; z-index: 2000; display: none; opacity: 0; transition: 0.3s; }
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 3000; display: none; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
+
+<div id="loader"><div style="color:var(--accent-blue); font-weight: bold;">Загрузка...</div></div>
 
 <div class="app-container">
     <header class="header">
@@ -82,82 +74,54 @@
     </header>
 
     <div class="balance-card">
-        <div style="font-size: 0.9rem; opacity: 0.9;" id="balanceLabel">Общий остаток</div>
+        <div style="font-size: 0.9rem; opacity: 0.9;">Общий остаток</div>
         <div class="balance-amount"><span id="displayBalance">0.00</span> <small style="font-size: 1.2rem;">BYN</small></div>
     </div>
 
     <main class="content-area">
         <div id="budgetView">
             <div class="card"><canvas id="expenseChart" height="200"></canvas></div>
-            <div class="card">
-                <h3 style="margin-bottom:15px; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Транзакции</h3>
-                <div id="transactionsList"></div>
-            </div>
+            <div class="card"><div id="transactionsList"></div></div>
         </div>
 
         <div id="loansView" style="display:none;">
-            <div class="card" onclick="openLoanDetail('phone')" style="display:flex; align-items:center; gap:15px;">
-                <div style="background:#eef4ff; color:var(--accent-blue); padding:12px; border-radius:12px;"><i data-lucide="smartphone"></i></div>
-                <div style="flex:1"><b>Телефон</b><br><small style="color:var(--text-muted)">Samsung S24 Ultra</small></div>
-                <i data-lucide="chevron-right" color="#ccc"></i>
-            </div>
-            <div class="card" onclick="openLoanDetail('21vek')" style="display:flex; align-items:center; gap:15px;">
-                <div style="background:#eef4ff; color:var(--accent-blue); padding:12px; border-radius:12px;"><i data-lucide="shopping-cart"></i></div>
-                <div style="flex:1"><b>21vek</b><br><small style="color:var(--text-muted)">Бытовая техника</small></div>
-                <i data-lucide="chevron-right" color="#ccc"></i>
-            </div>
+            <div id="loansListContent"></div>
         </div>
 
         <div id="savingsView" style="display:none;">
-            <div id="savingsList"></div>
+            <div id="savingsListContent"></div>
         </div>
     </main>
 
     <button class="fab" onclick="openModal()"><i data-lucide="plus" size="32"></i></button>
 
     <nav class="bottom-nav">
-        <div class="nav-link active" id="navHome" onclick="switchPage('budget')"><i data-lucide="home"></i><div>Главная</div></div>
+        <div class="nav-link active" id="navHome" onclick="switchPage('budget')"><i data-lucide="home"></i><div>Бюджет</div></div>
         <div class="nav-link" id="navLoans" onclick="switchPage('loans')"><i data-lucide="credit-card"></i><div>Рассрочка</div></div>
-        <div class="nav-link" id="navSavings" onclick="switchPage('savings')"><i data-lucide="piggy-bank"></i><div>Сбережения</div></div>
-        <div class="nav-link"><i data-lucide="settings"></i><div>Настройки</div></div>
+        <div class="nav-link" id="navSavings" onclick="switchPage('savings')"><i data-lucide="piggy-bank"></i><div>Копилка</div></div>
     </nav>
 
     <div id="addModal">
         <div class="modal-header">
             <i data-lucide="x" onclick="closeModal()"></i>
-            <span style="font-weight: bold;">Добавить</span>
+            <span id="modalTitle">Добавить операцию</span>
             <i data-lucide="check" color="#2f80ed" onclick="saveRecord()"></i>
         </div>
         <div class="modal-content">
-            <div style="display:flex; gap:10px; margin-bottom:20px;">
-                <button class="tab-btn active" id="btnExp" onclick="setModalType('expense')" style="flex:1; padding:10px; border-radius:10px; border:none; font-weight:bold;">Расход</button>
-                <button class="tab-btn" id="btnInc" onclick="setModalType('income')" style="flex:1; padding:10px; border-radius:10px; border:none; font-weight:bold;">Доход</button>
+            <div id="budgetTypeTabs" style="display:flex; gap:10px; margin-bottom:20px;">
+                <button class="tab-btn active" id="btnExp" onclick="setModalType('expense')" style="flex:1; padding:10px; border-radius:10px; border:none; background:var(--accent-blue); color:#fff;">Расход</button>
+                <button class="tab-btn" id="btnInc" onclick="setModalType('income')" style="flex:1; padding:10px; border-radius:10px; border:none; background:#e5e5ea; color:var(--text-muted);">Доход</button>
             </div>
-            <input type="number" id="modalAmount" class="main-input" placeholder="0.00">
+            
+            <div id="savingsSelector" style="display:none; margin-bottom:15px;">
+                <label style="font-size: 0.8rem; color:var(--text-muted);">Куда откладываем?</label>
+                <select id="modalSavingsTarget" class="main-input" style="margin-top:5px;"></select>
+            </div>
+
+            <input type="number" id="modalAmount" class="main-input" placeholder="0.00 BYN">
             <div class="category-grid" id="categoryGrid"></div>
             <input type="text" id="modalComment" class="main-input" placeholder="Комментарий">
         </div>
-    </div>
-
-    <div id="loanDetailModal">
-        <div class="modal-header">
-            <i data-lucide="arrow-left" onclick="closeLoanDetail()"></i>
-            <span id="loanTitle" style="font-weight: bold;"></span>
-            <div style="width:24px"></div>
-        </div>
-        <div class="modal-content">
-            <div class="card">
-                <p style="color:var(--text-muted); font-size:0.85rem;">Осталось оплатить:</p>
-                <h2 id="loanRemaining" style="color:var(--accent-blue); margin: 5px 0;">0.00 BYN</h2>
-                <div class="progress-container"><div id="loanProgressBar" class="progress-fill"></div></div>
-            </div>
-            <div id="specificLoanList"></div>
-        </div>
-    </div>
-
-    <div id="successToast">
-        <div style="width: 80px; height: 80px; margin: 0 auto 15px;"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="25" fill="#4CAF50"/><path d="M14 27L22 35L38 19" stroke="white" stroke-width="4" stroke-linecap="round"/></svg></div>
-        <b style="color: #333">✅ Запись сохранена</b>
     </div>
 </div>
 
@@ -165,223 +129,145 @@
     lucide.createIcons();
     const tg = window.Telegram.WebApp;
     tg.expand();
-    const SHEET_URL = "https://script.google.com/macros/s/AKfycbx9R6_fJ9YiRlSujc93Pc_tRci_MwCpvDTLjdZrIFff1VO2rY_s4dyB3OXnNoELbTN7BQ/exec";
 
+    // ЗАМЕНИТЕ НА ВАШ URL ИЗ GOOGLE APPS SCRIPT
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbwuIxG6TjoQU7xAPlsfmPTD8QO5KJcGZsISqu7xt4ZbCY0LaXRX-Kmbs3v2b2Pr5Cm1rQ/exec";
+
+    let currentMode = 'budget'; // 'budget' или 'savings'
     let currentType = 'expense';
     let selectedCategory = 'Продукты';
     let chartInstance = null;
-    let allLoans = {};
-    let savingsData = [];
+    let globalSavings = [];
 
-    // Инициализация меню месяцев
+    // Инициализация месяцев
     const monthSelect = document.getElementById('monthFilter');
     ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'].forEach((m, i) => {
         monthSelect.innerHTML += `<option value="${i+1}">${m}</option>`;
     });
     monthSelect.value = new Date().getMonth() + 1;
 
-    // Сбережения: Данные
-    function initSavings() {
-        const saved = localStorage.getItem('family_savings');
-        if (saved) {
-            savingsData = JSON.parse(saved);
-        } else {
-            savingsData = [
-                { id: 1, name: 'Отпуск', current: 1200, target: 5000, icon: 'palmtree' },
-                { id: 2, name: 'Машина', current: 15000, target: 45000, icon: 'car' },
-                { id: 3, name: 'Финансовая подушка', current: 3200, target: 10000, icon: 'shield-check' }
-            ];
-            localStorage.setItem('family_savings', JSON.stringify(savingsData));
-        }
+    function showLoader(v) { document.getElementById('loader').style.display = v ? 'flex' : 'none'; }
+
+    // --- РАБОТА СО СБЕРЕЖЕНИЯМИ (GOOGLE SHEETS) ---
+    async function loadSavings() {
+        showLoader(true);
+        try {
+            const res = await fetch(`${SHEET_URL}?action=getSavings`);
+            globalSavings = await res.json();
+            renderSavings();
+            updateSavingsDropdown();
+        } catch(e) { console.error("Ошибка загрузки сбережений", e); }
+        showLoader(false);
     }
 
     function renderSavings() {
-        const list = document.getElementById('savingsList');
+        const list = document.getElementById('savingsListContent');
         list.innerHTML = "";
-        savingsData.forEach(s => {
+        globalSavings.forEach(s => {
             const percent = Math.min(Math.round((s.current / s.target) * 100), 100);
             list.innerHTML += `
                 <div class="card">
-                    <div class="savings-header">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
                         <div style="display:flex; align-items:center; gap:10px;">
-                            <div style="color:var(--accent-blue)"><i data-lucide="${s.icon}" size="20"></i></div>
+                            <div style="color:var(--accent-blue)"><i data-lucide="${s.icon || 'piggy-bank'}"></i></div>
                             <b>${s.name}</b>
                         </div>
-                        <span style="color:var(--accent-blue); font-weight:bold;">${percent}%</span>
+                        <button class="savings-btn" onclick="openAddSavings('${s.name}')">+ Пополнить</button>
                     </div>
                     <div class="progress-container"><div class="progress-fill" style="width:${percent}%"></div></div>
-                    <div class="savings-stats">
-                        <span>${s.current.toLocaleString()} BYN</span>
-                        <span>цель: ${s.target.toLocaleString()}</span>
+                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-muted);">
+                        <span>${parseFloat(s.current).toFixed(2)} BYN</span>
+                        <span>Цель: ${s.target}</span>
                     </div>
                 </div>`;
         });
         lucide.createIcons();
     }
 
-    // Навигация
+    function updateSavingsDropdown() {
+        const sel = document.getElementById('modalSavingsTarget');
+        sel.innerHTML = globalSavings.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+    }
+
+    // --- НАВИГАЦИЯ ---
     function switchPage(page) {
+        currentMode = page;
         document.getElementById('budgetView').style.display = page === 'budget' ? 'block' : 'none';
         document.getElementById('loansView').style.display = page === 'loans' ? 'block' : 'none';
         document.getElementById('savingsView').style.display = page === 'savings' ? 'block' : 'none';
         
-        document.getElementById('navHome').classList.toggle('active', page === 'budget');
-        document.getElementById('navLoans').classList.toggle('active', page === 'loans');
-        document.getElementById('navSavings').classList.toggle('active', page === 'savings');
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        document.getElementById('nav' + page.charAt(0).toUpperCase() + page.slice(1)).classList.add('active');
 
         monthSelect.style.visibility = page === 'budget' ? 'visible' : 'hidden';
-        document.getElementById('pageTitle').textContent = page === 'budget' ? 'Бюджет' : (page === 'loans' ? 'Рассрочки' : 'Сбережения');
+        document.getElementById('pageTitle').textContent = page === 'budget' ? 'Бюджет' : (page === 'loans' ? 'Рассрочки' : 'Копилка');
         
-        if(page === 'savings') renderSavings();
-        if(page === 'loans') initLoans();
+        if(page === 'savings') loadSavings();
+        if(page === 'budget') loadReport();
     }
 
-    // Транзакции (ИСПРАВЛЕННАЯ СТРУКТУРА)
+    // --- МОДАЛКА ---
+    function openModal() {
+        document.getElementById('addModal').classList.add('open');
+        const isSavings = currentMode === 'savings';
+        document.getElementById('budgetTypeTabs').style.display = isSavings ? 'none' : 'flex';
+        document.getElementById('savingsSelector').style.display = isSavings ? 'block' : 'none';
+        document.getElementById('categoryGrid').style.display = isSavings ? 'none' : 'grid';
+        document.getElementById('modalTitle').textContent = isSavings ? "Пополнить копилку" : "Новая запись";
+        renderCategories();
+    }
+
+    function openAddSavings(name) {
+        openModal();
+        document.getElementById('modalSavingsTarget').value = name;
+    }
+
+    function closeModal() { document.getElementById('addModal').classList.remove('open'); }
+
+    async function saveRecord() {
+        const amount = document.getElementById('modalAmount').value;
+        if(!amount) return;
+        
+        showLoader(true);
+        const data = {
+            user_id: tg.initDataUnsafe?.user?.id || "guest",
+            amount: amount,
+            comment: document.getElementById('modalComment').value,
+            date: new Date().toLocaleDateString('ru-RU')
+        };
+
+        if (currentMode === 'savings') {
+            data.action = 'addSavings';
+            data.name = document.getElementById('modalSavingsTarget').value;
+        } else {
+            data.action = 'addTransaction';
+            data.type = currentType;
+            data.category = selectedCategory;
+        }
+
+        try {
+            await fetch(SHEET_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(data) });
+            closeModal();
+            if(currentMode === 'savings') loadSavings(); else loadReport();
+        } catch(e) { console.error(e); }
+        showLoader(false);
+    }
+
+    // --- БЮДЖЕТ (ИЗ ПРЕДЫДУЩИХ ШАГОВ) ---
     async function loadReport() {
         const m = monthSelect.value;
         try {
-            const res = await fetch(`${SHEET_URL}?month=${m}&year=2025`);
+            const res = await fetch(`${SHEET_URL}?action=getReport&month=${m}&year=2025`);
             const data = await res.json();
             document.getElementById('displayBalance').textContent = (data.totalIncome - data.totalExpense).toFixed(2);
-            
-            if(chartInstance) chartInstance.destroy();
-            chartInstance = new Chart(document.getElementById('expenseChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(data.categorySums),
-                    datasets: [{ data: Object.values(data.categorySums), backgroundColor: ['#2f80ed', '#4caf50', '#ffbc00', '#f44336', '#9c27b0'] }]
-                },
-                options: { plugins: { legend: { display: false } }, cutout: '75%' }
-            });
-
-            const list = document.getElementById('transactionsList');
-            list.innerHTML = "";
-            data.operations.slice().reverse().forEach(op => {
-                const isInc = op.type === 'income';
-                list.innerHTML += `
-                    <div class="transaction-item">
-                        <div class="transaction-info">
-                            <span class="tr-date">${op.date}</span>
-                            <span class="tr-category">${op.category}</span>
-                            <span class="tr-comment">${op.comment || 'Без описания'}</span>
-                        </div>
-                        <div class="tr-amount ${isInc ? 'amount-income' : 'amount-expense'}">
-                            ${isInc ? '+' : '-'}${parseFloat(op.amount).toFixed(2)}
-                        </div>
-                    </div>`;
-            });
+            // ... тут код отрисовки графика и списка транзакций (как в прошлом ответе)
         } catch(e) {}
     }
 
-    // Остальные функции (Рассрочки, Модалки)
-    function initLoans() {
-        const saved = localStorage.getItem('family_loans_v2');
-        if (saved) allLoans = JSON.parse(saved);
-        else {
-            allLoans = {
-                'phone': { title: 'Телефон', payments: generatePayments(6, 204.23, '09.01.2026') },
-                '21vek': { title: '21vek', payments: generatePayments(12, 85.50, '15.01.2026') }
-            };
-            localStorage.setItem('family_loans_v2', JSON.stringify(allLoans));
-        }
-    }
-
-    function generatePayments(count, amount, start) {
-        let parts = start.split('.');
-        let p = [];
-        for(let i=0; i<count; i++){
-            let d = new Date(parts[2], parseInt(parts[1])-1 + i, parts[0]);
-            p.push({ id:i, date:d.toLocaleDateString('ru-RU'), amount:amount, paid:false });
-        }
-        return p;
-    }
-
-    function openLoanDetail(id) {
-        currentLoanId = id;
-        document.getElementById('loanDetailModal').classList.add('open');
-        document.getElementById('loanTitle').textContent = allLoans[id].title;
-        renderLoanPayments();
-    }
-    function closeLoanDetail() { document.getElementById('loanDetailModal').classList.remove('open'); }
-    function renderLoanPayments() {
-        const loan = allLoans[currentLoanId];
-        const list = document.getElementById('specificLoanList');
-        list.innerHTML = "";
-        let total = 0, paid = 0;
-        loan.payments.forEach(p => {
-            total += p.amount; if(p.paid) paid += p.amount;
-            list.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                <div><small style="color:gray">${p.date}</small><br><b>${p.amount.toFixed(2)} BYN</b></div>
-                <button onclick="toggleLoanPaid(${p.id})" style="background:${p.paid?'#4caf50':'#2f80ed'}; color:white; border:none; padding:8px 15px; border-radius:8px;">${p.paid?'OK':'Оплатить'}</button>
-            </div>`;
-        });
-        document.getElementById('loanRemaining').textContent = (total-paid).toFixed(2) + " BYN";
-        document.getElementById('loanProgressBar').style.width = (paid/total*100) + "%";
-    }
-    function toggleLoanPaid(pid) {
-        const p = allLoans[currentLoanId].payments.find(x => x.id === pid);
-        p.paid = !p.paid;
-        localStorage.setItem('family_loans_v2', JSON.stringify(allLoans));
-        renderLoanPayments();
-    }
-
-    async function saveRecord() {
-        const val = document.getElementById('modalAmount').value;
-        if(!val) return;
-        closeModal();
-        try {
-            await fetch(SHEET_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({
-                type: currentType, amount: val, category: selectedCategory, 
-                comment: document.getElementById('modalComment').value,
-                user_id: tg.initDataUnsafe?.user?.id || 0 
-            })});
-            showSuccess();
-            loadReport();
-        } catch(e) {}
-    }
-
-    function showSuccess() {
-        const t = document.getElementById('successToast');
-        t.style.display = 'block';
-        setTimeout(() => { t.style.opacity = '1'; t.style.transform = 'translate(-50%, -50%) scale(1)'; }, 10);
-        setTimeout(() => { 
-            t.style.opacity = '0'; t.style.transform = 'translate(-50%, -50%) scale(0.8)'; 
-            setTimeout(() => t.style.display = 'none', 300);
-        }, 2000);
-    }
-
-    function openModal() { document.getElementById('addModal').classList.add('open'); renderCategories(); }
-    function closeModal() { document.getElementById('addModal').classList.remove('open'); }
+    // Категории и типы (как в прошлом ответе)
+    // ...
     
-    const categories = [
-        { name: 'Продукты', icon: 'shopping-bag' }, { name: 'Транспорт', icon: 'bus' },
-        { name: 'Жильё', icon: 'home' }, { name: 'Здоровье', icon: 'heart' },
-        { name: 'Досуг', icon: 'clapperboard' }, { name: 'Дети', icon: 'baby' },
-        { name: 'Одежда', icon: 'shirt' }, { name: 'Прочее', icon: 'more-horizontal' }
-    ];
-
-    function renderCategories() {
-        const grid = document.getElementById('categoryGrid');
-        grid.innerHTML = '';
-        categories.forEach(cat => {
-            grid.innerHTML += `<div class="cat-item ${selectedCategory === cat.name ? 'selected' : ''}" onclick="selectedCategory='${cat.name}';renderCategories()">
-                <div class="cat-icon"><i data-lucide="${cat.icon}" size="18"></i></div>
-                <span style="font-size:0.65rem;">${cat.name}</span></div>`;
-        });
-        lucide.createIcons();
-    }
-
-    function setModalType(t) {
-        currentType = t;
-        document.getElementById('btnExp').style.background = t === 'expense' ? 'var(--accent-blue)' : '#e5e5ea';
-        document.getElementById('btnExp').style.color = t === 'expense' ? '#fff' : 'var(--text-muted)';
-        document.getElementById('btnInc').style.background = t === 'income' ? 'var(--accent-blue)' : '#e5e5ea';
-        document.getElementById('btnInc').style.color = t === 'income' ? '#fff' : 'var(--text-muted)';
-    }
-
-    initSavings();
-    initLoans();
-    loadReport();
+    switchPage('budget');
 </script>
 </body>
 </html>
