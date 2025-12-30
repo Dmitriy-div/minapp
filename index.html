@@ -3,94 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Finance App</title>
+    <title>Finance Flow</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <style>
-        :root { --bg: #f0f2f5; --blue: #2f80ed; --red: #eb5757; --green: #27ae60; --muted: #8e8e93; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding-bottom: 100px; color: #333; }
-        .card { background: #fff; margin: 15px; padding: 18px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .balance-card { background: var(--blue); color: white; margin: 15px; padding: 25px; border-radius: 24px; text-align: center; }
-        .row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f5f5f5; }
-        .fab { position: fixed; bottom: 90px; right: 20px; width: 60px; height: 60px; background: var(--blue); color: white; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px rgba(0,0,0,0.2); z-index: 1000; }
-        .nav { position: fixed; bottom: 0; width: 100%; display: flex; background: #fff; border-top: 1px solid #eee; padding: 10px 0 25px; }
-        .nav-item { flex: 1; text-align: center; font-size: 10px; color: var(--muted); cursor: pointer; }
-        .nav-item.active { color: var(--blue); }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: none; }
-        .modal { position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; z-index: 2001; border-radius: 25px 25px 0 0; transform: translateY(100%); transition: 0.3s; padding: 25px; }
-        .modal.open { transform: translateY(0); }
-        .input { width: 100%; padding: 14px; border: 1px solid #eee; border-radius: 12px; background: #f9f9f9; font-size: 1rem; margin-bottom: 15px; outline: none; }
-        .btn-save { width: 100%; padding: 16px; background: var(--blue); color: white; border: none; border-radius: 12px; font-weight: bold; }
-        .pb-bg { background: #eee; height: 8px; border-radius: 4px; margin: 10px 0; }
-        .pb-fill { height: 100%; background: var(--blue); border-radius: 4px; transition: 0.5s; }
+        :root {
+            --bg: #f8f9fb;
+            --accent: #007aff;
+            --card: #ffffff;
+            --text: #1c1c1e;
+            --secondary: #8e8e93;
+            --green: #34c759;
+            --red: #ff3b30;
+            --radius: 24px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding-bottom: 100px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Анимированные карточки */
+        .card {
+            background: var(--card);
+            margin: 16px;
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+
+        .balance-header {
+            background: linear-gradient(135deg, #007aff 0%, #0056b3 100%);
+            color: white;
+            margin: 16px;
+            padding: 30px 20px;
+            border-radius: var(--radius);
+            text-align: center;
+            box-shadow: 0 12px 30px rgba(0,122,255,0.3);
+        }
+
+        /* Навигация как в iOS */
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(20px);
+            display: flex;
+            padding: 12px 0 30px;
+            border-top: 0.5px solid rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            color: var(--secondary);
+            font-size: 10px;
+            transition: 0.3s;
+        }
+
+        .nav-item.active { color: var(--accent); transform: scale(1.1); }
+
+        /* Современная кнопка Добавить */
+        .add-btn {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 64px;
+            height: 64px;
+            background: var(--accent);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 25px rgba(0,122,255,0.4);
+            border: 4px solid white;
+            z-index: 999;
+            cursor: pointer;
+        }
+
+        /* Поля ввода */
+        .input-pill {
+            width: 100%;
+            background: #f2f2f7;
+            border: none;
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .modal-sheet {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            border-radius: 30px 30px 0 0;
+            padding: 30px 20px;
+            transform: translateY(100%);
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2000;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
+        }
+
+        .modal-sheet.active { transform: translateY(0); }
+
+        .overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.4); opacity:0; pointer-events:none; transition: 0.3s; z-index: 1999;
+        }
+        .overlay.active { opacity:1; pointer-events:auto; }
+
+        /* Прогресс-бары */
+        .progress-container { background: #f2f2f7; height: 8px; border-radius: 4px; overflow: hidden; margin: 12px 0; }
+        .progress-bar { height: 100%; background: var(--accent); border-radius: 4px; transition: 1s ease-out; }
+
+        .status-paid-badge {
+            background: #e8f5e9; color: var(--green);
+            padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700;
+        }
     </style>
 </head>
 <body>
 
-    <div class="balance-card">
-        <div style="font-size: 0.8rem; opacity: 0.8;">Текущий баланс</div>
-        <div style="font-size: 2rem; font-weight: 800;"><span id="totalBalance">0.00</span> BYN</div>
+    <div class="balance-header animate__animated animate__fadeInDown">
+        <div style="font-size: 13px; opacity: 0.8; margin-bottom: 8px;">Мои средства</div>
+        <div style="font-size: 32px; font-weight: 800;"><span id="totalBalance">0.00</span> BYN</div>
     </div>
 
-    <div id="content"></div>
+    <div id="app-content"></div>
 
-    <button class="fab" onclick="openModal()"><i data-lucide="plus" size="30"></i></button>
+    <div class="add-btn" onclick="openActionModal()">
+        <i data-lucide="plus" size="32"></i>
+    </div>
 
-    <nav class="nav">
-        <div class="nav-item active" id="tab-budget" onclick="switchTab('budget')"><i data-lucide="wallet"></i><div>Бюджет</div></div>
-        <div class="nav-item" id="tab-loans" onclick="switchTab('loans')"><i data-lucide="credit-card"></i><div>Рассрочки</div></div>
-        <div class="nav-item" id="tab-savings" onclick="switchTab('savings')"><i data-lucide="piggy-bank"></i><div>Копилка</div></div>
+    <nav class="nav-bar">
+        <div class="nav-item active" onclick="switchTab('budget', this)"><i data-lucide="wallet"></i><div>Бюджет</div></div>
+        <div class="nav-item" onclick="switchTab('loans', this)"><i data-lucide="credit-card"></i><div>Рассрочки</div></div>
+        <div class="nav-item" onclick="switchTab('savings', this)"><i data-lucide="target"></i><div>Цели</div></div>
     </nav>
 
-    <div id="modalOverlay" class="modal-overlay" onclick="closeModal()"></div>
-    <div id="modal" class="modal">
-        <div style="display:flex; justify-content: space-between; margin-bottom: 20px;">
-            <h2 style="margin:0; font-size: 1.2rem;">Новая запись</h2>
-            <i data-lucide="x" onclick="closeModal()"></i>
-        </div>
+    <div id="overlay" class="overlay" onclick="closeActionModal()"></div>
+    <div id="actionModal" class="modal-sheet">
+        <div style="width: 40px; height: 5px; background: #ddd; border-radius: 3px; margin: 0 auto 20px;"></div>
+        <h3 style="margin-bottom: 20px;">Новая операция</h3>
         
-        <select id="mType" class="input" onchange="updateCategories()">
+        <select id="mType" class="input-pill" onchange="updateCategories()">
             <option value="expense">Расход</option>
             <option value="income">Доход</option>
+            <option value="savings">В копилку</option>
         </select>
-
-        <input type="number" id="mAmount" class="input" placeholder="Сумма 0.00" inputmode="decimal">
         
-        <select id="mCategory" class="input">
+        <input type="number" id="mAmount" class="input-pill" placeholder="Сумма" inputmode="decimal">
+        
+        <select id="mCategory" class="input-pill">
             </select>
-
-        <input type="text" id="mComment" class="input" placeholder="Комментарий">
         
-        <button class="btn-save" onclick="saveRecord()">Сохранить</button>
+        <input type="text" id="mComment" class="input-pill" placeholder="Комментарий">
+        
+        <button onclick="saveOperation()" style="width:100%; background: var(--accent); color: white; border: none; padding: 18px; border-radius: 18px; font-weight: 700; font-size: 16px;">
+            Подтвердить
+        </button>
     </div>
 
 <script>
-    const SHEET_URL = "https://script.google.com/macros/s/AKfycbyfVlgIs2mt9Q9YVmOvQHLgSkkmJZDxEOs8S5-sRa7WEhZdVvp_sBvsOlK23D8lz-R9fQ/exec"; // <--- ЗАМЕНИТЬ
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbwTK9zJs3Rwq_AF4umZc3rg0-Cw76lnxb6jsYzlFzI3t6CELNiGuIs9TZIMMjt0kV-g7w/exec";
     let currentTab = 'budget';
-    let myChart = null;
+    let savingsGoals = [];
 
-    const cats = {
-        expense: ["Продукты", "Транспорт", "Жилье", "Развлечения", "Здоровье", "Другое"],
-        income: ["Зарплата", "Colour Wood", "Подарки", "Прочее"]
-    };
-
-    function updateCategories() {
-        const type = document.getElementById('mType').value;
-        const select = document.getElementById('mCategory');
-        select.innerHTML = cats[type].map(c => `<option value="${c}">${c}</option>`).join('');
-    }
-
-    async function switchTab(tab) {
+    async function switchTab(tab, el) {
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        el.classList.add('active');
         currentTab = tab;
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        document.getElementById('tab-' + tab).classList.add('active');
         loadData();
     }
 
     async function loadData() {
-        const cont = document.getElementById('content');
-        cont.innerHTML = '<p style="text-align:center; padding:20px;">Загрузка...</p>';
+        const cont = document.getElementById('app-content');
+        cont.innerHTML = '<div style="text-align:center; padding:50px; opacity:0.5;">Загрузка...</div>';
+        
         try {
             const action = currentTab === 'budget' ? '' : '?action=get' + currentTab.charAt(0).toUpperCase() + currentTab.slice(1);
             const res = await fetch(SHEET_URL + action);
@@ -98,107 +200,142 @@
 
             if (currentTab === 'budget') renderBudget(data);
             else if (currentTab === 'loans') renderLoans(data);
-            else if (currentTab === 'savings') renderSavings(data);
-        } catch (e) { cont.innerHTML = '<p style="text-align:center; color:red;">Ошибка данных</p>'; }
+            else if (currentTab === 'savings') {
+                savingsGoals = data.map(s => s.name);
+                renderSavings(data);
+            }
+        } catch (e) {
+            cont.innerHTML = '<div style="padding:20px; color:red;">Ошибка. Проверьте соединение.</div>';
+        }
         lucide.createIcons();
     }
 
     function renderBudget(data) {
         document.getElementById('totalBalance').textContent = (data.totalIncome - data.totalExpense).toFixed(2);
-        let html = '<div class="card"><canvas id="myChart" height="200"></canvas></div><div class="card"><h3>История</h3>';
-        data.operations.reverse().forEach(op => {
-            const color = op.type === 'income' ? 'var(--green)' : 'var(--red)';
-            html += `<div class="row">
-                <div><small>${op.date}</small><br><b>${op.category}</b><br><small>${op.comment || ''}</small></div>
-                <div style="color:${color}; font-weight:bold;">${op.type==='income'?'+':'-'}${op.amount.toFixed(2)}</div>
-            </div>`;
+        let html = '<div class="card animate__animated animate__fadeInUp"><h3>История транзакций</h3>';
+        data.operations.slice(-10).reverse().forEach(op => {
+            html += `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:0.5px solid #eee;">
+                    <div><div style="font-weight:600; font-size:14px;">${op.category}</div><div style="font-size:11px; color:#888;">${op.date}</div></div>
+                    <div style="font-weight:700; color:${op.type==='income'?'var(--green)':'var(--red)'}">${op.type==='income'?'+':'-'}${op.amount}</div>
+                </div>`;
         });
-        document.getElementById('content').innerHTML = html + '</div>';
-        
-        const ctx = document.getElementById('myChart').getContext('2d');
-        if(myChart) myChart.destroy();
-        myChart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(data.categorySums),
-                datasets: [{ data: Object.values(data.categorySums), backgroundColor: ['#2f80ed', '#27ae60', '#f2994a', '#eb5757', '#9b51e0'] }]
-            },
-            options: { plugins: { legend: { position: 'bottom' } } }
-        });
+        document.getElementById('app-content').innerHTML = html + '</div>';
     }
 
     function renderLoans(data) {
-        let html = '<div class="card"><h3>Рассрочки</h3>';
+        let html = '<div class="animate__animated animate__fadeInUp">';
         data.forEach(l => {
-            const p = Math.round(((l.total - l.balance) / l.total) * 100);
-            html += `<div style="margin-bottom:15px; cursor:pointer;" onclick="openPlan('${l.id}', '${l.name}')">
-                <div style="display:flex; justify-content:space-between"><b>${l.name}</b> <span>${p}%</span></div>
-                <div class="pb-bg"><div class="pb-fill" style="width:${p}%;"></div></div>
-                <small>Остаток: ${l.balance.toFixed(2)} BYN</small>
-            </div>`;
+            const p = Math.min(100, Math.round(((l.total - l.balance) / l.total) * 100));
+            html += `
+                <div class="card" onclick="openLoanPlan('${l.id}', '${l.name}')">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><b>${l.name}</b> <span>${p}%</span></div>
+                    <div class="progress-container"><div class="progress-bar" style="width:${p}%"></div></div>
+                    <div style="display:flex; justify-content:space-between; font-size:12px; color:#888;">
+                        <span>Остаток: ${l.balance} BYN</span><span>График ></span>
+                    </div>
+                </div>`;
         });
-        document.getElementById('content').innerHTML = html + '</div>';
+        document.getElementById('app-content').innerHTML = html + '</div>';
     }
 
-    async function openPlan(id, name) {
-        const cont = document.getElementById('content');
-        cont.innerHTML = '<p style="text-align:center;">Загрузка...</p>';
+    async function openLoanPlan(id, name) {
         const res = await fetch(`${SHEET_URL}?action=getInstallmentPlan&loanId=${id}`);
         const plan = await res.json();
-        let html = `<div class="card"><h3>${name}</h3>`;
+        let html = `<div class="card animate__animated animate__zoomIn"><h3>${name}</h3>`;
         plan.forEach(p => {
-            html += `<div class="row">
-                <div><b>${p.date}</b><br><small>${p.amount} BYN</small></div>
-                <div>${p.status === 'paid' ? '<span style="color:var(--green)">✓ Оплачено</span>' : 
-                `<button onclick="pay('${id}', '${p.date}', this)" style="padding:5px 10px; border-radius:8px; border:none; background:var(--green); color:#fff;">Оплатить</button>`}</div>
-            </div>`;
+            const isPaid = p.status === 'paid';
+            html += `
+                <div style="display:flex; justify-content:space-between; padding:15px 0; border-bottom:0.5px solid #eee;">
+                    <div><div style="font-weight:600;">${p.date}</div><div style="font-size:12px;">${p.amount} BYN</div></div>
+                    <div>${isPaid ? '<span class="status-paid-badge">ОПЛАЧЕНО</span>' : 
+                    `<button onclick="payInstallment('${id}','${p.date}')" style="background:var(--accent); color:white; border:none; padding:8px 15px; border-radius:10px; font-size:12px;">Оплатить</button>`}</div>
+                </div>`;
         });
-        cont.innerHTML = html + `<button onclick="switchTab('loans')" style="width:100%; margin-top:10px; padding:10px; border:none; border-radius:10px;">Назад</button></div>`;
-    }
-
-    async function pay(id, date, btn) {
-        btn.disabled = true;
-        await fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'markPaid', loanId: id, date: date }) });
-        openPlan(id, "Обновление...");
+        document.getElementById('app-content').innerHTML = html + `<button onclick="switchTab('loans', document.querySelectorAll('.nav-item')[1])" style="width:100%; margin-top:20px; border:none; background:none; color:var(--accent); font-weight:600;">← Назад к списку</button></div>`;
+        lucide.createIcons();
     }
 
     function renderSavings(data) {
-        let html = '<div class="card"><h3>Копилка</h3>';
+        let html = '<div class="animate__animated animate__fadeInUp">';
         data.forEach(s => {
             const p = Math.round((s.current / s.target) * 100);
-            html += `<div><b>${s.name}</b><div class="pb-bg"><div class="pb-fill" style="width:${p}%; background:var(--green);"></div></div><small>${s.current} / ${s.target}</small></div>`;
+            html += `
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><b>${s.name}</b> <span>${p}%</span></div>
+                    <div class="progress-container"><div class="progress-bar" style="width:${p}%; background:var(--green)"></div></div>
+                    <div style="display:flex; justify-content:space-between; font-size:12px; color:#888;">
+                        <span>Накоплено: ${s.current} BYN</span><span>Цель: ${s.target}</span>
+                    </div>
+                </div>`;
         });
-        document.getElementById('content').innerHTML = html + '</div>';
+        document.getElementById('app-content').innerHTML = html + '</div>';
     }
 
-    function openModal() {
-        document.getElementById('mType').value = 'expense';
+    // Modal & Operations
+    function openActionModal() {
+        document.getElementById('overlay').classList.add('active');
+        document.getElementById('actionModal').classList.add('active');
         updateCategories();
-        document.getElementById('modalOverlay').style.display = 'block';
-        document.getElementById('modal').classList.add('open');
-    }
-    function closeModal() {
-        document.getElementById('modalOverlay').style.display = 'none';
-        document.getElementById('modal').classList.remove('open');
     }
 
-    async function saveRecord() {
+    function closeActionModal() {
+        document.getElementById('overlay').classList.remove('active');
+        document.getElementById('actionModal').classList.remove('active');
+    }
+
+    function updateCategories() {
+        const type = document.getElementById('mType').value;
+        const catSelect = document.getElementById('mCategory');
+        catSelect.innerHTML = '';
+        
+        if (type === 'savings') {
+            savingsGoals.forEach(g => catSelect.innerHTML += `<option value="${g}">${g}</option>`);
+        } else {
+            ['🛒 Продукты', '🚗 Транспорт', '🏠 Жилье', '🍿 Отдых', '💊 Здоровье', '✨ Другое'].forEach(c => {
+                catSelect.innerHTML += `<option value="${c}">${c}</option>`;
+            });
+        }
+    }
+
+    async function saveOperation() {
         const amt = document.getElementById('mAmount').value;
-        if(!amt) return;
+        if (!amt) return;
+
         const data = {
             type: document.getElementById('mType').value,
             amount: amt,
             category: document.getElementById('mCategory').value,
             comment: document.getElementById('mComment').value,
-            user_id: window.Telegram.WebApp.initDataUnsafe?.user?.id || 'guest'
+            user_id: window.Telegram.WebApp.initDataUnsafe?.user?.id || 'user'
         };
-        closeModal();
+
+        closeActionModal();
+        if (window.Telegram.WebApp.HapticFeedback) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        
         await fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
         loadData();
     }
 
-    loadData();
-    lucide.createIcons();
+    async function payInstallment(id, date) {
+        if (!confirm("Подтвердить оплату?")) return;
+        await fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'markPaid', loanId: id, date: date }) });
+        loadData();
+    }
+
+    // Сначала загружаем цели копилки, чтобы они были в модалке
+    async function init() {
+        try {
+            const res = await fetch(SHEET_URL + '?action=getSavings');
+            const data = await res.json();
+            savingsGoals = data.map(s => s.name);
+        } catch(e) {}
+        loadData();
+        lucide.createIcons();
+        window.Telegram.WebApp.expand();
+    }
+
+    init();
 </script>
 </body>
 </html>
