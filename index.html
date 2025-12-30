@@ -136,7 +136,7 @@
     <nav class="nav-bar">
         <div class="nav-item active" onclick="switchTab('budget', this)"><i data-lucide="wallet"></i><div>Бюджет</div></div>
         <div class="nav-item" onclick="switchTab('loans', this)"><i data-lucide="credit-card"></i><div>Рассрочки</div></div>
-        <div class="nav-item" onclick="switchTab('savings', this)"><i data-lucide="target"></i><div>Цели</div></div>
+        <div class="nav-item" onclick="switchTab('savings', this)"><i data-lucide="target"></i><div>Копилка</div></div>
     </nav>
 
     <div id="overlay" class="overlay" onclick="closeActionModal()"></div>
@@ -206,7 +206,7 @@
     }
 
     // 3. ДОБАВЛЯЕМ БЛОК ТРАНЗАКЦИЙ
-    html += '<div class="card animate__animated animate__fadeInUp"><h3>Транзакции</h3>';
+    html += '<div class="card animate__animated animate__fadeInUp"><h3>Последние операции</h3>';
     
     if (data.operations.length === 0) {
         html += '<div style="text-align:center; color:var(--secondary); padding:20px;">Нет операций за этот месяц</div>';
@@ -305,7 +305,7 @@
         } else if (type === 'savings') {
             savingsGoals.forEach(g => catSelect.innerHTML += `<option value="${g}">${g}</option>`);
         } else {
-            ['Продукты', 'Транспорт', 'Жилье', 'Развлечения', 'Здоровье', 'Другое'].forEach(c => catSelect.innerHTML += `<option value="${c}">${c}</option>`);
+            ['Продукты', 'Машина', 'Коммуналка', 'Развлечения', 'Здоровье', 'Налоги', 'Кредиты/Рассрочки', 'Питомцы', 'Colour Wood', 'Церковь', 'Другое'].forEach(c => catSelect.innerHTML += `<option value="${c}">${c}</option>`);
         }
     }
 
@@ -350,4 +350,5 @@
 </script>
 </body>
 </html>
+
 
