@@ -1,284 +1,434 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<title>Семейный бюджет и рассрочка</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Семейный бюджет</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --accent-color: #2f80ed;
+            --accent-hover: #1366d6;
+            --text-main: #333333;
+            --text-muted: #8e8e93;
+            --tab-inactive: #e5e5ea;
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
 
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
-body { font-family: 'Roboto', sans-serif; max-width:480px; margin:auto; padding:16px; background:#f0f2f5; color:#333; }
-h2 { text-align:center; color:#2f80ed; }
-.card { background:#fff; border-radius:12px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,0.08); margin:12px 0; }
-input, select { width:100%; padding:12px; margin:6px 0; border-radius:8px; border:1px solid #ddd; font-size:16px; }
-button { width:100%; padding:12px; margin-top:12px; border-radius:10px; border:none; background:#2f80ed; color:#fff; font-size:18px; cursor:pointer; transition:0.2s; }
-button:hover { background:#1366d6; }
-#totals { display:flex; justify-content:space-between; margin-top:12px; }
-.total-card { flex:1; background:#fff; border-radius:12px; padding:16px; margin:4px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.08); transition:transform 0.3s, background 0.3s; }
-canvas { margin-top:16px; border-radius:12px; background:#fff; padding:12px; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
-.operations-container { margin-top:16px; max-height:300px; overflow-y:auto; position:relative; }
-.operation-card { display:flex; justify-content:space-between; padding:12px; margin-bottom:8px; border-radius:10px;
-  background:#fff; box-shadow:0 2px 6px rgba(0,0,0,0.06); opacity:0; transform:translateY(-20px);
-  transition:opacity 0.5s, transform 0.5s, background 0.5s; }
-.operation-income { border-left:5px solid #4caf50; }
-.operation-expense { border-left:5px solid #f44336; }
-.new-operation { background:#fff7d6; }
-.fade-out { opacity:0; transform:translateY(-20px); }
-.fade-in { opacity:1; transform:translateY(0); }
-</style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: var(--bg-color);
+        }
+
+        /* Header */
+        .header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 { font-size: 1.2rem; font-weight: 700; color: var(--accent-color); }
+        
+        /* Balance Card */
+        .balance-card {
+            background-color: var(--accent-color);
+            color: white;
+            margin: 0 16px 20px;
+            padding: 24px;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(47, 128, 237, 0.2);
+            text-align: center;
+        }
+
+        .balance-label { font-size: 0.9rem; opacity: 0.9; margin-bottom: 8px; }
+        .balance-amount { font-size: 2.2rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            padding: 0 16px;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 10px;
+            border-radius: 12px;
+            border: none;
+            background: var(--tab-inactive);
+            color: var(--text-muted);
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .tab.active { background: var(--accent-color); color: white; }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 16px 100px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 16px;
+            box-shadow: var(--shadow);
+            margin-bottom: 16px;
+        }
+
+        h3 { font-size: 1rem; margin-bottom: 12px; }
+
+        /* Inputs & Buttons */
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin: 6px 0;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            background: #f9f9f9;
+            font-size: 16px;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            width: 100%;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        /* Operations */
+        .operation-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        .op-income { border-left: 4px solid #4caf50; }
+        .op-expense { border-left: 4px solid #f44336; }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0 25px;
+            border-top: 1px solid #eee;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .nav-item.active { color: var(--accent-color); }
+
+        /* Floating Button */
+        .fab {
+            position: absolute;
+            bottom: 85px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 4px 15px rgba(47, 128, 237, 0.4);
+            border: none;
+            cursor: pointer;
+        }
+    </style>
 </head>
-
 <body>
-<h2>💰 Семейный бюджет</h2>
 
-<!-- Навигация -->
-<div class="card">
-  <button onclick="showPage('budget')">Бюджет</button>
-  <button onclick="showPage('loans')">Рассрочка</button>
-</div>
+<div class="app-container">
+    <header class="header">
+        <h1>Бюджет</h1>
+        <div id="dateDisplay" style="font-size: 0.85rem; color: var(--text-muted);"></div>
+    </header>
 
-<!-- СТРАНИЦА БЮДЖЕТ -->
-<div id="budgetPage">
-  <div class="card">
-    <select id="type">
-      <option value="income">Доход</option>
-      <option value="expense">Расход</option>
-    </select>
-    <input id="amount" type="number" placeholder="Сумма">
-    <select id="category"></select>
-    <input id="comment" type="text" placeholder="Комментарий">
-    <button onclick="save()">Сохранить</button>
-  </div>
-
-  <div class="card">
-    <h3>Фильтр по месяцу</h3>
-    <select id="filterMonth"></select>
-    <select id="filterYear"></select>
-    <button onclick="loadReport()">Применить</button>
-  </div>
-
-  <div id="totals">
-    <div class="total-card" id="incomeCard"><h4>Доход</h4><p id="totalIncome">0</p></div>
-    <div class="total-card" id="expenseCard"><h4>Расход</h4><p id="totalExpense">0</p></div>
-  </div>
-
-  <canvas id="expenseChart" width="400" height="200"></canvas>
-
-  <div class="card">
-    <h3>Последние операции</h3>
-    <div class="operations-container" id="operationsContainer"></div>
-  </div>
-</div>
-
-<!-- СТРАНИЦА РАССРОЧКИ -->
-<div id="loansPage" style="display:none;">
-  <div class="card">
-    <h3>Трекер рассрочки</h3>
-    <div id="loanProgress" style="background:#ddd;border-radius:12px;overflow:hidden;height:24px;margin-bottom:12px;">
-      <div id="loanProgressBar" style="height:100%;width:0%;background:#2f80ed;transition:width 0.5s;"></div>
+    <div class="balance-card">
+        <p class="balance-label">Общий остаток</p>
+        <div class="balance-amount">
+            <span id="totalBalance">0.00</span> <span style="font-size: 1.2rem;">BYN</span>
+        </div>
     </div>
-    <h4>Оставшаяся сумма к оплате: <span id="loanRemaining">0.00 BYN</span></h4>
-    <canvas id="loanChart" width="400" height="200" style="margin-bottom:12px;"></canvas>
-    <div id="loansContainer"></div>
-  </div>
 
-  <div class="card">
-    <h4>Добавить платеж</h4>
-    <input type="date" id="loanDate">
-    <input type="number" id="loanAmount" placeholder="Сумма">
-    <input type="text" id="loanComment" placeholder="Комментарий">
-    <button onclick="addLoan()">Добавить платеж</button>
-  </div>
+    <div class="tabs">
+        <button class="tab active" onclick="switchMainTab('budget')">Бюджет</button>
+        <button class="tab" onclick="switchMainTab('loans')">Рассрочка</button>
+    </div>
+
+    <main class="content" id="mainContent">
+        
+        <div id="budgetSection">
+            <div class="card">
+                <h3>Добавить запись</h3>
+                <select id="type">
+                    <option value="expense">Расход</option>
+                    <option value="income">Доход</option>
+                </select>
+                <input id="amount" type="number" placeholder="Сумма">
+                <select id="category"></select>
+                <input id="comment" type="text" placeholder="Комментарий">
+                <button class="btn-primary" onclick="save()">Сохранить</button>
+            </div>
+
+            <div class="card">
+                <h3>Аналитика</h3>
+                <canvas id="expenseChart" width="400" height="250"></canvas>
+            </div>
+
+            <div class="card">
+                <h3>Последние операции</h3>
+                <div id="operationsList"></div>
+            </div>
+        </div>
+
+        <div id="loansSection" style="display:none;">
+            <div class="card">
+                <h3>Прогресс рассрочки</h3>
+                <div style="background:#eee; height:12px; border-radius:6px; overflow:hidden; margin-bottom:10px;">
+                    <div id="loanProgressBar" style="width:0%; height:100%; background:var(--accent-color); transition:0.5s;"></div>
+                </div>
+                <p>Осталось: <b id="loanRemaining">0.00 BYN</b></p>
+            </div>
+            <div id="loansContainer"></div>
+        </div>
+
+    </main>
+
+    <button class="fab" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+        <i data-lucide="plus"></i>
+    </button>
+
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="switchMainTab('budget')">
+            <i data-lucide="home"></i>
+            <span>Главная</span>
+        </div>
+        <div class="nav-item" onclick="switchMainTab('loans')">
+            <i data-lucide="credit-card"></i>
+            <span>Рассрочка</span>
+        </div>
+        <div class="nav-item">
+            <i data-lucide="settings"></i>
+            <span>Настройки</span>
+        </div>
+    </nav>
 </div>
 
 <script>
-const tg = window.Telegram.WebApp;
-tg.expand();
-const user = tg.initDataUnsafe?.user || { id:0 };
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbx9R6_fJ9YiRlSujc93Pc_tRci_MwCpvDTLjdZrIFff1VO2rY_s4dyB3OXnNoELbTN7BQ/exec"; // Вставь свой URL Apps Script
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    const user = tg.initDataUnsafe?.user || { id: 0 };
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbx9R6_fJ9YiRlSujc93Pc_tRci_MwCpvDTLjdZrIFff1VO2rY_s4dyB3OXnNoELbTN7BQ/exec";
 
-/* ---------- Навигация ---------- */
-const budgetPage = document.getElementById("budgetPage");
-const loansPage = document.getElementById("loansPage");
-function showPage(page){
-  if(page==='budget'){ budgetPage.style.display='block'; loansPage.style.display='none'; }
-  else { budgetPage.style.display='none'; loansPage.style.display='block'; loadLoans(); }
-}
+    // Инициализация иконок
+    lucide.createIcons();
 
-/* ---------- Категории ---------- */
-const categories = {
-  income:["Зарплата","Подработка","Подарки","Прочее"],
-  expense:["Продукты","Жильё","Транспорт","Дети","Здоровье","Развлечения","Одежда","Прочее"]
-};
-function updateCategories() {
-  const type = document.getElementById("type").value;
-  const select = document.getElementById("category");
-  select.innerHTML="";
-  categories[type].forEach(cat=>{
-    const option = document.createElement("option");
-    option.value = cat;
-    option.textContent = cat;
-    select.appendChild(option);
-  });
-}
-document.getElementById("type").addEventListener("change", updateCategories);
-updateCategories();
+    /* ---------- Навигация ---------- */
+    function switchMainTab(page) {
+        const bSec = document.getElementById('budgetSection');
+        const lSec = document.getElementById('loansSection');
+        const tabs = document.querySelectorAll('.tab');
+        const navItems = document.querySelectorAll('.nav-item');
 
-/* ---------- Фильтры ---------- */
-const monthSelect = document.getElementById("filterMonth");
-const yearSelect = document.getElementById("filterYear");
-const months = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
-const currentMonth = new Date().getMonth();
-const currentYear = new Date().getFullYear();
-months.forEach((m,i)=>monthSelect.options.add(new Option(m,i+1)));
-monthSelect.value=currentMonth+1;
-for(let y=currentYear-5;y<=currentYear+1;y++) yearSelect.options.add(new Option(y,y));
-yearSelect.value=currentYear;
+        if(page === 'budget') {
+            bSec.style.display = 'block';
+            lSec.style.display = 'none';
+            tabs[0].classList.add('active'); tabs[1].classList.remove('active');
+            navItems[0].classList.add('active'); navItems[1].classList.remove('active');
+        } else {
+            bSec.style.display = 'none';
+            lSec.style.display = 'block';
+            tabs[1].classList.add('active'); tabs[0].classList.remove('active');
+            navItems[1].classList.add('active'); navItems[0].classList.remove('active');
+            loadLoans();
+        }
+    }
 
-/* ---------- Бюджет ---------- */
-let chartInstance = null;
-async function save(){
-  const data = {
-    type: document.getElementById("type").value,
-    amount: document.getElementById("amount").value,
-    category: document.getElementById("category").value,
-    comment: document.getElementById("comment").value,
-    user_id: user.id
-  };
-  if(!data.amount){
-    tg.showPopup({title:"Ошибка", message:"Введите сумму", buttons:[{type:"ok"}]});
-    return;
-  }
-  try{
-    await fetch(SHEET_URL,{method:"POST",mode:"no-cors",body:JSON.stringify(data)});
-    document.getElementById("amount").value="";
-    document.getElementById("comment").value="";
-    tg.showPopup({title:"Готово ✅", message:"Запись добавлена", buttons:[{type:"ok"}]});
-    loadReport(true);
-  }catch(e){ console.error(e); tg.showPopup({title:"Ошибка ❌", message:"Не удалось сохранить запись", buttons:[{type:"ok"}]}); }
-}
+    /* ---------- Категории ---------- */
+    const categories = {
+        income: ["Зарплата", "Подработка", "Подарки", "Прочее"],
+        expense: ["Продукты", "Жильё", "Транспорт", "Дети", "Здоровье", "Развлечения", "Одежда", "Прочее"]
+    };
 
-async function loadReport(highlightNew=false){
-  try{
-    const month = monthSelect.value;
-    const year = yearSelect.value;
-    const res = await fetch(`${SHEET_URL}?month=${month}&year=${year}`);
-    const data = await res.json();
+    function updateCategories() {
+        const type = document.getElementById("type").value;
+        const select = document.getElementById("category");
+        select.innerHTML = "";
+        categories[type].forEach(cat => {
+            const option = document.createElement("option");
+            option.value = cat;
+            option.textContent = cat;
+            select.appendChild(option);
+        });
+    }
+    document.getElementById("type").addEventListener("change", updateCategories);
+    updateCategories();
 
-    animateValue("totalIncome", parseFloat(document.getElementById("totalIncome").textContent), data.totalIncome);
-    animateValue("totalExpense", parseFloat(document.getElementById("totalExpense").textContent), data.totalExpense);
+    /* ---------- Бюджет Логика ---------- */
+    let chartInstance = null;
 
-    const ctx = document.getElementById('expenseChart').getContext('2d');
-    const labels = Object.keys(data.categorySums);
-    const values = Object.values(data.categorySums);
-    if(chartInstance) chartInstance.destroy();
-    chartInstance = new Chart(ctx,{
-      type:'pie',
-      data:{labels, datasets:[{label:'Расходы', data:values, backgroundColor:['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40','#C9CBCF','#FF6666']}]},
-      options:{responsive:true, plugins:{legend:{position:'bottom'}}, animation:{animateScale:true, animateRotate:true}}
-    });
+    async function save() {
+        const amount = document.getElementById("amount").value;
+        if (!amount) {
+            tg.showPopup({ title: "Ошибка", message: "Введите сумму" });
+            return;
+        }
 
-    const container = document.getElementById("operationsContainer");
-    const oldCards = Array.from(container.children);
-    oldCards.forEach(c=>c.classList.add("fade-out"));
-    setTimeout(()=>{
-      container.innerHTML="";
-      data.operations.reverse().forEach((op,i)=>{
-        const div = document.createElement("div");
-        div.className="operation-card "+(op.type==="income"?"operation-income":"operation-expense");
-        if(highlightNew && i===0) div.classList.add("new-operation");
-        div.innerHTML=`<div>${op.date}</div><div>${op.type}</div><div>${op.amount} BYN</div><div>${op.category}</div><div>${op.comment}</div>`;
-        container.appendChild(div);
-        setTimeout(()=>div.classList.add("fade-in"),10);
-        if(highlightNew && i===0) setTimeout(()=>div.classList.remove("new-operation"),2000);
-      });
-    },300);
+        const data = {
+            type: document.getElementById("type").value,
+            amount: amount,
+            category: document.getElementById("category").value,
+            comment: document.getElementById("comment").value,
+            user_id: user.id
+        };
 
-  }catch(e){ console.error(e); }
-}
+        try {
+            await fetch(SHEET_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(data) });
+            document.getElementById("amount").value = "";
+            document.getElementById("comment").value = "";
+            tg.showPopup({ title: "Успех ✅", message: "Запись сохранена" });
+            loadReport();
+        } catch (e) {
+            tg.showPopup({ title: "Ошибка", message: "Сбой сети" });
+        }
+    }
 
-function animateValue(id,start,end,duration=600){
-  const obj = document.getElementById(id);
-  const range = end-start;
-  let startTime=null;
-  function step(timestamp){
-    if(!startTime) startTime=timestamp;
-    const progress=Math.min((timestamp-startTime)/duration,1);
-    obj.textContent=(start+range*progress).toFixed(2);
-    if(progress<1) requestAnimationFrame(step);
-  }
-  requestAnimationFrame(step);
-}
+    async function loadReport() {
+        try {
+            const now = new Date();
+            const res = await fetch(`${SHEET_URL}?month=${now.getMonth()+1}&year=${now.getFullYear()}`);
+            const data = await res.json();
 
-loadReport();
+            // Баланс
+            const balance = (data.totalIncome - data.totalExpense).toFixed(2);
+            document.getElementById("totalBalance").textContent = balance;
 
-/* ---------- Трекер рассрочки ---------- */
-let loansData = [
-  {date:"2026-01-09", amount:204.23, comment:"Платёж 1", paid:false},
-  {date:"2026-02-09", amount:204.23, comment:"Платёж 2", paid:false},
-  {date:"2026-03-09", amount:204.23, comment:"Платёж 3", paid:false},
-  {date:"2026-04-09", amount:204.23, comment:"Платёж 4", paid:false},
-  {date:"2026-05-09", amount:204.23, comment:"Платёж 5", paid:false},
-  {date:"2026-06-09", amount:204.23, comment:"Платёж 6", paid:false}
-];
+            // График
+            const ctx = document.getElementById('expenseChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(data.categorySums),
+                    datasets: [{
+                        data: Object.values(data.categorySums),
+                        backgroundColor: ['#2f80ed', '#4caf50', '#ff9800', '#f44336', '#9c27b0', '#00bcd4']
+                    }]
+                },
+                options: { plugins: { legend: { position: 'bottom' } } }
+            });
 
-let loanChart = null;
+            // Список операций
+            const list = document.getElementById("operationsList");
+            list.innerHTML = "";
+            data.operations.slice(-5).reverse().forEach(op => {
+                const div = document.createElement("div");
+                div.className = `operation-item ${op.type === 'income' ? 'op-income' : 'op-expense'}`;
+                div.innerHTML = `
+                    <div><b>${op.category}</b><br><small>${op.comment || ''}</small></div>
+                    <div style="text-align:right"><b>${op.amount}</b><br><small>${op.date}</small></div>
+                `;
+                list.appendChild(div);
+            });
 
-function addLoan(){
-  const date = document.getElementById("loanDate").value;
-  const amount = parseFloat(document.getElementById("loanAmount").value);
-  const comment = document.getElementById("loanComment").value;
-  if(!date || !amount) return alert("Введите дату и сумму");
-  loansData.push({date, amount, comment, paid:false});
-  document.getElementById("loanDate").value="";
-  document.getElementById("loanAmount").value="";
-  document.getElementById("loanComment").value="";
-  loadLoans();
-}
+        } catch (e) { console.error(e); }
+    }
 
-function togglePaid(index){
-  loansData[index].paid = !loansData[index].paid;
-  loadLoans();
-}
+    /* ---------- Рассрочка Логика ---------- */
+    let loansData = [
+        {date:"2026-01-09", amount:204.23, comment:"Платёж 1", paid:false},
+        {date:"2026-02-09", amount:204.23, comment:"Платёж 2", paid:false},
+        {date:"2026-03-09", amount:204.23, comment:"Платёж 3", paid:false},
+        {date:"2026-04-09", amount:204.23, comment:"Платёж 4", paid:false}
+    ];
 
-function loadLoans(){
-  const container = document.getElementById("loansContainer");
-  container.innerHTML="";
-  let total=0, paid=0;
+    function loadLoans() {
+        const container = document.getElementById("loansContainer");
+        container.innerHTML = "";
+        let total = 0, paid = 0;
 
-  loansData.forEach((loan,i)=>{
-    total += loan.amount;
-    if(loan.paid) paid += loan.amount;
-    const div = document.createElement("div");
-    div.className="operation-card "+(loan.paid?"operation-income":"operation-expense");
-    div.innerHTML=`<div>${loan.date}</div><div>${loan.amount.toFixed(2)} BYN</div><div>${loan.comment}</div>
-                     <button onclick="togglePaid(${i})">${loan.paid?"Отменить":"Оплачено"}</button>`;
-    container.appendChild(div);
-  });
+        loansData.forEach((loan, i) => {
+            total += loan.amount;
+            if (loan.paid) paid += loan.amount;
+            
+            const div = document.createElement("div");
+            div.className = "card";
+            div.style.display = "flex";
+            div.style.justifyContent = "space-between";
+            div.style.alignItems = "center";
+            div.innerHTML = `
+                <div>
+                    <small>${loan.date}</small><br>
+                    <b>${loan.amount.toFixed(2)} BYN</b><br>
+                    <span style="font-size:0.8rem">${loan.comment}</span>
+                </div>
+                <button onclick="togglePaid(${i})" class="btn-primary" style="width:auto; padding:8px 15px; margin:0; background:${loan.paid ? '#4caf50':'#2f80ed'}">
+                    ${loan.paid ? 'Оплачено' : 'Оплатить'}
+                </button>
+            `;
+            container.appendChild(div);
+        });
 
-  const remaining = (total - paid).toFixed(2);
-  document.getElementById("loanRemaining").textContent = remaining + " BYN";
+        document.getElementById("loanRemaining").textContent = (total - paid).toFixed(2) + " BYN";
+        document.getElementById("loanProgressBar").style.width = (paid/total*100) + "%";
+    }
 
-  const progress = total? Math.round((paid/total)*100) : 0;
-  document.getElementById("loanProgressBar").style.width = progress+"%";
+    function togglePaid(i) {
+        loansData[i].paid = !loansData[i].paid;
+        loadLoans();
+    }
 
-  const ctx = document.getElementById('loanChart').getContext('2d');
-  const labels = loansData.map(l=>l.date);
-  const paidData = loansData.map(l=>l.paid?l.amount:0);
-  const unpaidData = loansData.map(l=>l.paid?0:l.amount);
-
-  if(loanChart) loanChart.destroy();
-  loanChart = new Chart(ctx,{
-    type:'bar',
-    data:{ labels, datasets:[
-      {label:'Оплачено', data:paidData, backgroundColor:'#2f80ed'},
-      {label:'Не оплачено', data:unpaidData, backgroundColor:'#f44336'}
-    ]},
-    options:{responsive:true, plugins:{legend:{position:'bottom'}}, scales:{y:{beginAtZero:true}}}
-  });
-}
+    // Запуск
+    loadReport();
+    document.getElementById("dateDisplay").textContent = new Date().toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
 </script>
+
 </body>
 </html>
