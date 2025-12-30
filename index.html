@@ -24,26 +24,35 @@
         body { background-color: var(--bg-color); color: var(--text-main); overflow-x: hidden; }
         .app-container { width: 100%; max-width: 480px; height: 100vh; margin: auto; position: relative; display: flex; flex-direction: column; background: var(--bg-color); }
 
+        /* Header */
         .header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
         .header h1 { font-size: 1.2rem; color: var(--accent-blue); }
-        
-        #monthFilter { background: none; border: none; color: var(--accent-blue); font-weight: bold; font-size: 0.9rem; cursor: pointer; outline: none; }
+        #monthFilter { background: none; border: none; color: var(--accent-blue); font-weight: bold; font-size: 0.9rem; outline: none; }
 
+        /* Balance Card */
         .balance-card { background: var(--accent-blue); color: #fff; padding: 25px; border-radius: 20px; text-align: center; margin: 0 20px 20px; box-shadow: 0 8px 16px rgba(47, 128, 237, 0.2); }
         .balance-amount { font-size: 2.2rem; font-weight: bold; margin-top: 5px; }
 
         .content-area { flex: 1; overflow-y: auto; padding: 0 20px 100px; }
-        .card { background: var(--card-bg); border-radius: 16px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 15px; position: relative; }
+        .card { background: var(--card-bg); border-radius: 16px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 15px; }
 
-        .transaction-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
-        .amount-income { color: var(--income-color); font-weight: bold; }
-        .amount-expense { color: var(--expense-color); font-weight: bold; }
+        /* ИСПРАВЛЕННЫЙ БЛОК ТРАНЗАКЦИЙ */
+        .transaction-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f2f2f2; }
+        .transaction-item:last-child { border-bottom: none; }
+        .transaction-info { display: flex; flex-direction: column; gap: 2px; }
+        .tr-date { font-size: 0.7rem; color: var(--text-muted); }
+        .tr-category { font-weight: 700; font-size: 0.95rem; color: var(--text-main); }
+        .tr-comment { font-size: 0.8rem; color: var(--text-muted); }
+        .tr-amount { font-weight: 700; font-size: 1rem; white-space: nowrap; }
+        
+        .amount-income { color: var(--income-color); }
+        .amount-expense { color: var(--expense-color); }
 
-        /* Рассрочки: Список */
+        /* Рассрочки */
         .loan-item-card { display: flex; align-items: center; gap: 15px; cursor: pointer; padding: 20px; }
         .loan-icon { width: 45px; height: 45px; border-radius: 12px; background: #eef4ff; color: var(--accent-blue); display: flex; align-items: center; justify-content: center; }
 
-        /* Модальные окна */
+        /* Модалки */
         #addModal, #loanDetailModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 100; transform: translateY(100%); transition: transform 0.3s ease-out; display: flex; flex-direction: column; }
         .open { transform: translateY(0) !important; }
         .modal-header { display: flex; justify-content: space-between; padding: 20px; align-items: center; border-bottom: 1px solid var(--border-color); background: #fff; }
@@ -55,16 +64,10 @@
         .cat-icon { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--input-bg); border: 1px solid #eee; }
         .cat-item.selected .cat-icon { background: var(--accent-blue); color: #fff; }
 
-        /* Уведомление (Success Toast) */
-        #successToast { 
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
-            background: rgba(255, 255, 255, 0.95); padding: 30px; border-radius: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center;
-            z-index: 2000; display: none; opacity: 0; transition: 0.3s;
-        }
-        .success-checkmark { width: 80px; height: 80px; margin: 0 auto 15px; }
+        /* Toast */
+        #successToast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8); background: rgba(255, 255, 255, 0.95); padding: 30px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; z-index: 2000; display: none; opacity: 0; transition: 0.3s; }
 
-        /* UI */
+        /* Nav */
         .fab { position: absolute; bottom: 90px; right: 20px; width: 60px; height: 60px; background: var(--accent-blue); border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 6px 16px rgba(47, 128, 237, 0.3); z-index: 10; }
         .bottom-nav { display: flex; justify-content: space-around; padding: 12px 0 25px; border-top: 1px solid var(--border-color); background: var(--card-bg); }
         .nav-link { color: var(--text-muted); text-align: center; font-size: 0.75rem; cursor: pointer; }
@@ -78,16 +81,11 @@
 <div class="app-container">
     <header class="header">
         <h1 id="pageTitle">Бюджет</h1>
-        <select id="monthFilter" onchange="loadReport()">
-            <option value="1">Январь</option><option value="2">Февраль</option><option value="3">Март</option>
-            <option value="4">Апрель</option><option value="5">Май</option><option value="6">Июнь</option>
-            <option value="7">Июль</option><option value="8">Август</option><option value="9">Сентябрь</option>
-            <option value="10">Октябрь</option><option value="11">Ноябрь</option><option value="12">Декабрь</option>
-        </select>
+        <select id="monthFilter" onchange="loadReport()"></select>
     </header>
 
     <div class="balance-card">
-        <div style="font-size: 0.9rem; opacity: 0.9;" id="balanceLabel">Общий остаток</div>
+        <div style="font-size: 0.9rem; opacity: 0.9;">Общий остаток</div>
         <div class="balance-amount"><span id="displayBalance">0.00</span> <small style="font-size: 1.2rem;">BYN</small></div>
     </div>
 
@@ -95,7 +93,7 @@
         <div id="budgetView">
             <div class="card"><canvas id="expenseChart" height="200"></canvas></div>
             <div class="card">
-                <h3 style="margin-bottom:15px; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Транзакции</h3>
+                <h3 style="margin-bottom:15px; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Транзакции</h3>
                 <div id="transactionsList"></div>
             </div>
         </div>
@@ -124,7 +122,7 @@
     <div id="addModal">
         <div class="modal-header">
             <i data-lucide="x" onclick="closeModal()"></i>
-            <span style="font-weight: bold;">Новая запись</span>
+            <span style="font-weight: bold;">Добавить</span>
             <i data-lucide="check" color="#2f80ed" onclick="saveRecord()"></i>
         </div>
         <div class="modal-content">
@@ -141,7 +139,7 @@
     <div id="loanDetailModal">
         <div class="modal-header">
             <i data-lucide="arrow-left" onclick="closeLoanDetail()"></i>
-            <span id="loanTitle" style="font-weight: bold;">Детали</span>
+            <span id="loanTitle" style="font-weight: bold;"></span>
             <div style="width:24px"></div>
         </div>
         <div class="modal-content">
@@ -157,7 +155,7 @@
     </div>
 
     <div id="successToast">
-        <div class="success-checkmark">
+        <div style="width: 80px; height: 80px; margin: 0 auto 15px;">
             <svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="26" cy="26" r="25" fill="#4CAF50"/>
                 <path d="M14 27L22 35L38 19" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
@@ -177,25 +175,22 @@
     let selectedCategory = 'Продукты';
     let chartInstance = null;
     let currentLoanId = '';
-
-    // --- ЛОГИКА РАССРОЧЕК ---
     let allLoans = {};
 
+    // Инициализация месяцев
+    const monthSelect = document.getElementById('monthFilter');
+    ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'].forEach((m, i) => {
+        monthSelect.innerHTML += `<option value="${i+1}">${m}</option>`;
+    });
+    monthSelect.value = new Date().getMonth() + 1;
+
+    // Рассрочки
     function initLoans() {
         const saved = localStorage.getItem('family_loans_v2');
-        if (saved) {
-            allLoans = JSON.parse(saved);
-        } else {
-            // Начальные данные для двух рассрочек
+        if (saved) { allLoans = JSON.parse(saved); } else {
             allLoans = {
-                'phone': {
-                    title: 'Телефон',
-                    payments: generatePayments(6, 204.23, '09.01.2026')
-                },
-                '21vek': {
-                    title: '21vek',
-                    payments: generatePayments(12, 85.50, '15.01.2026')
-                }
+                'phone': { title: 'Телефон', payments: generatePayments(6, 204.23, '09.01.2026') },
+                '21vek': { title: '21vek', payments: generatePayments(12, 85.50, '15.01.2026') }
             };
             localStorage.setItem('family_loans_v2', JSON.stringify(allLoans));
         }
@@ -206,12 +201,7 @@
         let payments = [];
         for(let i=0; i<count; i++) {
             let d = new Date(parts[2], parseInt(parts[1])-1 + i, parts[0]);
-            payments.push({
-                id: i,
-                date: d.toLocaleDateString('ru-RU'),
-                amount: amount,
-                paid: false
-            });
+            payments.push({ id: i, date: d.toLocaleDateString('ru-RU'), amount: amount, paid: false });
         }
         return payments;
     }
@@ -223,110 +213,47 @@
         renderLoanPayments();
     }
 
-    function closeLoanDetail() {
-        document.getElementById('loanDetailModal').classList.remove('open');
-    }
+    function closeLoanDetail() { document.getElementById('loanDetailModal').classList.remove('open'); }
 
     function renderLoanPayments() {
         const loan = allLoans[currentLoanId];
         const list = document.getElementById('specificLoanList');
         list.innerHTML = "";
         let total = 0, paid = 0;
-
         loan.payments.forEach(p => {
             total += p.amount; if(p.paid) paid += p.amount;
-            const div = document.createElement('div');
-            div.className = "card";
-            div.style.display = "flex";
-            div.style.justifyContent = "space-between";
-            div.style.alignItems = "center";
-            div.innerHTML = `
+            list.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
                 <div><small style="color:gray">${p.date}</small><br><b>${p.amount.toFixed(2)} BYN</b></div>
                 <button onclick="toggleLoanPaid(${p.id})" style="background:${p.paid?'#4caf50':'#2f80ed'}; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer;">
                     ${p.paid ? 'Оплачено' : 'Оплатить'}
-                </button>`;
-            list.appendChild(div);
+                </button></div>`;
         });
-
         document.getElementById('loanRemaining').textContent = (total - paid).toFixed(2) + " BYN";
         document.getElementById('loanProgressBar').style.width = (paid/total*100) + "%";
     }
 
-    function toggleLoanPaid(paymentId) {
-        const loan = allLoans[currentLoanId];
-        const p = loan.payments.find(x => x.id === paymentId);
+    function toggleLoanPaid(pid) {
+        const p = allLoans[currentLoanId].payments.find(x => x.id === pid);
         p.paid = !p.paid;
         localStorage.setItem('family_loans_v2', JSON.stringify(allLoans));
         renderLoanPayments();
     }
 
-    // --- UX УВЕДОМЛЕНИЕ ---
-    function showSuccess() {
-        const toast = document.getElementById('successToast');
-        toast.style.display = 'block';
-        setTimeout(() => { toast.style.opacity = '1'; toast.style.transform = 'translate(-50%, -50%) scale(1)'; }, 10);
-        
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translate(-50%, -50%) scale(0.8)';
-            setTimeout(() => toast.style.display = 'none', 300);
-        }, 2000);
-    }
-
-    // --- БЮДЖЕТ И ОБЩАЯ ЛОГИКА ---
+    // Основная логика
     function switchPage(page) {
         const isBudget = page === 'budget';
         document.getElementById('budgetView').style.display = isBudget ? 'block' : 'none';
         document.getElementById('loansView').style.display = isBudget ? 'none' : 'block';
         document.getElementById('navHome').classList.toggle('active', isBudget);
         document.getElementById('navLoans').classList.toggle('active', !isBudget);
-        document.getElementById('monthFilter').style.visibility = isBudget ? "visible" : "hidden";
+        monthSelect.style.visibility = isBudget ? "visible" : "hidden";
         document.getElementById('pageTitle').textContent = isBudget ? "Бюджет" : "Рассрочки";
     }
 
-    async function saveRecord() {
-        const amount = document.getElementById('modalAmount').value;
-        if(!amount) return;
-        const data = { 
-            type: currentType, amount, category: selectedCategory, 
-            comment: document.getElementById('modalComment').value,
-            user_id: tg.initDataUnsafe?.user?.id || 0 
-        };
-        closeModal();
-        try {
-            await fetch(SHEET_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(data) });
-            showSuccess(); // Показываем анимацию
-            loadReport();
-        } catch(e) { console.error(e); }
-    }
-
-    function openModal() { document.getElementById('addModal').classList.add('open'); renderCategories(); }
-    function closeModal() { document.getElementById('addModal').classList.remove('open'); }
-
-    const categories = [
-        { name: 'Продукты', icon: 'shopping-bag' }, { name: 'Транспорт', icon: 'bus' },
-        { name: 'Жильё', icon: 'home' }, { name: 'Здоровье', icon: 'heart' },
-        { name: 'Досуг', icon: 'clapperboard' }, { name: 'Дети', icon: 'baby' },
-        { name: 'Одежда', icon: 'shirt' }, { name: 'Прочее', icon: 'more-horizontal' }
-    ];
-
-    function renderCategories() {
-        const grid = document.getElementById('categoryGrid');
-        grid.innerHTML = '';
-        categories.forEach(cat => {
-            const div = document.createElement('div');
-            div.className = `cat-item ${selectedCategory === cat.name ? 'selected' : ''}`;
-            div.onclick = () => { selectedCategory = cat.name; renderCategories(); };
-            div.innerHTML = `<div class="cat-icon"><i data-lucide="${cat.icon}" size="18"></i></div><span style="font-size:0.65rem;">${cat.name}</span>`;
-            grid.appendChild(div);
-        });
-        lucide.createIcons();
-    }
-
     async function loadReport() {
-        const month = document.getElementById('monthFilter').value;
+        const m = monthSelect.value;
         try {
-            const res = await fetch(`${SHEET_URL}?month=${month}&year=2025`);
+            const res = await fetch(`${SHEET_URL}?month=${m}&year=2025`);
             const data = await res.json();
             document.getElementById('displayBalance').textContent = (data.totalIncome - data.totalExpense).toFixed(2);
             
@@ -340,16 +267,70 @@
                 options: { plugins: { legend: { display: false } }, cutout: '75%' }
             });
 
+            // ИСПРАВЛЕННЫЙ ВЫВОД ТРАНЗАКЦИЙ
             const list = document.getElementById('transactionsList');
             list.innerHTML = "";
             data.operations.slice().reverse().forEach(op => {
                 const isInc = op.type === 'income';
-                list.innerHTML += `<div class="transaction-item">
-                    <div class="transaction-info"><b>${op.category}</b><small style="color:gray">${op.comment || op.date}</small></div>
-                    <div class="${isInc ? 'amount-income' : 'amount-expense'}">${isInc?'+':'-'}${parseFloat(op.amount).toFixed(2)}</div>
-                </div>`;
+                list.innerHTML += `
+                    <div class="transaction-item">
+                        <div class="transaction-info">
+                            <span class="tr-date">${op.date}</span>
+                            <span class="tr-category">${op.category}</span>
+                            <span class="tr-comment">${op.comment || 'Без комментария'}</span>
+                        </div>
+                        <div class="tr-amount ${isInc ? 'amount-income' : 'amount-expense'}">
+                            ${isInc ? '+' : '-'}${parseFloat(op.amount).toFixed(2)}
+                        </div>
+                    </div>`;
             });
         } catch(e) {}
+    }
+
+    async function saveRecord() {
+        const val = document.getElementById('modalAmount').value;
+        if(!val) return;
+        closeModal();
+        try {
+            await fetch(SHEET_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({
+                type: currentType, amount: val, category: selectedCategory, 
+                comment: document.getElementById('modalComment').value,
+                user_id: tg.initDataUnsafe?.user?.id || 0 
+            })});
+            showSuccess();
+            loadReport();
+        } catch(e) {}
+    }
+
+    function showSuccess() {
+        const t = document.getElementById('successToast');
+        t.style.display = 'block';
+        setTimeout(() => { t.style.opacity = '1'; t.style.transform = 'translate(-50%, -50%) scale(1)'; }, 10);
+        setTimeout(() => { 
+            t.style.opacity = '0'; t.style.transform = 'translate(-50%, -50%) scale(0.8)'; 
+            setTimeout(() => t.style.display = 'none', 300);
+        }, 2000);
+    }
+
+    function openModal() { document.getElementById('addModal').classList.add('open'); renderCategories(); }
+    function closeModal() { document.getElementById('addModal').classList.remove('open'); }
+    
+    const categories = [
+        { name: 'Продукты', icon: 'shopping-bag' }, { name: 'Транспорт', icon: 'bus' },
+        { name: 'Жильё', icon: 'home' }, { name: 'Здоровье', icon: 'heart' },
+        { name: 'Досуг', icon: 'clapperboard' }, { name: 'Дети', icon: 'baby' },
+        { name: 'Одежда', icon: 'shirt' }, { name: 'Прочее', icon: 'more-horizontal' }
+    ];
+
+    function renderCategories() {
+        const grid = document.getElementById('categoryGrid');
+        grid.innerHTML = '';
+        categories.forEach(cat => {
+            grid.innerHTML += `<div class="cat-item ${selectedCategory === cat.name ? 'selected' : ''}" onclick="selectedCategory='${cat.name}';renderCategories()">
+                <div class="cat-icon"><i data-lucide="${cat.icon}" size="18"></i></div>
+                <span style="font-size:0.65rem;">${cat.name}</span></div>`;
+        });
+        lucide.createIcons();
     }
 
     function setModalType(t) {
@@ -358,8 +339,6 @@
         document.getElementById('btnInc').classList.toggle('active', t==='income');
     }
 
-    // Запуск
-    document.getElementById('monthFilter').value = new Date().getMonth() + 1;
     initLoans();
     loadReport();
 </script>
