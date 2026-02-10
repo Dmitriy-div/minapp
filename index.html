@@ -17,6 +17,7 @@
             --secondary: #8e8e93; 
             --green: #34c759; 
             --red: #ff3b30; 
+            --orange: #ff9500;
             --radius: 24px; 
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -45,19 +46,48 @@
             box-shadow: 0 8px 24px rgba(0,0,0,0.04); 
         }
         
+        /* История */
         .history-item { 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
             padding: 12px 0; 
-            border-bottom: 0.5px solid #f2f2f7; 
+            border-bottom: 0.5px solid #f2f2f7;
+            position: relative;
         }
         .history-item:last-child { border-bottom: none; }
+        .history-item-content {
+            flex: 1;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        .history-item-content:active {
+            background: #f2f2f7;
+        }
         .history-date { font-size: 11px; color: var(--secondary); }
         .history-cat { font-weight: 700; font-size: 15px; display: block; }
         .history-comm { font-size: 13px; color: var(--secondary); }
-        .history-amt { font-weight: 800; font-size: 16px; }
+        .history-amt { font-weight: 800; font-size: 16px; margin-left: 12px; }
+        
+        /* Edit button */
+        .edit-btn {
+            background: var(--orange);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-left: 8px;
+            white-space: nowrap;
+        }
+        .edit-btn:active {
+            opacity: 0.7;
+        }
 
+        /* Модалка */
         .modal-sheet { 
             position: fixed; 
             bottom: 0; 
@@ -87,6 +117,7 @@
         }
         .overlay.active { opacity: 1; pointer-events: auto; }
 
+        /* Элементы управления */
         .input-pill { 
             width: 100%; 
             background: #f2f2f7; 
@@ -138,6 +169,7 @@
         }
         .add-btn:active { transform: scale(0.95); }
 
+        /* Прогресс-бары */
         .pb-bg { 
             background: #f2f2f7; 
             height: 10px; 
@@ -147,6 +179,7 @@
         }
         .pb-fill { height: 100%; transition: 1s ease-in-out; }
 
+        /* Покупки */
         .shop-item { 
             display: flex; 
             align-items: center; 
@@ -182,6 +215,20 @@
         }
         .btn-primary:active { opacity: 0.8; }
         
+        .btn-danger {
+            width: 100%;
+            background: var(--red);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 18px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+        .btn-danger:active { opacity: 0.8; }
+        
         .btn-secondary {
             width: 100%;
             margin-top: 20px;
@@ -204,6 +251,13 @@
             padding: 50px;
             opacity: 0.3;
         }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -214,7 +268,7 @@
 
     <div id="app-content"></div>
 
-    <div class="add-btn" onclick="openActionModal()">
+    <div class="add-btn" onclick="openAddModal()">
         <i data-lucide="plus" style="width: 24px; height: 24px;"></i>
     </div>
 
@@ -237,9 +291,11 @@
         </div>
     </nav>
 
-    <div id="overlay" class="overlay" onclick="closeActionModal()"></div>
+    <!-- Add/Edit Modal -->
+    <div id="overlay" class="overlay" onclick="closeModal()"></div>
     <div id="actionModal" class="modal-sheet">
         <div style="width: 40px; height: 4px; background: #e5e5ea; border-radius: 2px; margin: 0 auto 15px;"></div>
+        <div id="modalTitle" class="modal-title">Новая операция</div>
         <select id="mType" class="input-pill" onchange="updateCategories()">
             <option value="expense">📉 Расход</option>
             <option value="income">📈 Доход</option>
@@ -248,14 +304,16 @@
         <input type="number" id="mAmount" class="input-pill" placeholder="Сумма" inputmode="decimal" step="0.01" min="0">
         <select id="mCategory" class="input-pill"></select>
         <input type="text" id="mComment" class="input-pill" placeholder="Комментарий (необязательно)">
-        <button onclick="saveOperation()" class="btn-primary">Сохранить</button>
+        <button onclick="saveOperation()" class="btn-primary" id="saveBtn">Сохранить</button>
+        <button onclick="deleteOperation()" class="btn-danger" id="deleteBtn" style="display: none;">Удалить</button>
     </div>
 
 <script>
-    const SHEET_URL = "https://script.google.com/macros/s/AKfycbxbO9VJTYAee2RSqvpf21cIO1SnI2oAm8kiCZaQj8MKAZjhf_c4wP2fi9t1cCy6_Q7t1A/exec"; 
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbwJB_iuenyWDTWXJVGGqh0l1PyIhnuwUTOu35g3Yr95TN-AMWlb9k9sDj0vdQuBd4nNfg/exec"; 
     let currentTab = 'budget';
     let savingsGoals = [];
     let chartInstance = null;
+    let editingOperation = null; // Store operation being edited
 
     async function switchTab(tab, el) {
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -275,21 +333,9 @@
                 url += '?action=get' + tabName;
             }
             
-            console.log('Fetching:', url);
             const res = await fetch(url);
-            
-            console.log('Response status:', res.status);
-            
             const text = await res.text();
-            console.log('Response text:', text.substring(0, 200));
-            
-            let data;
-            try {
-                data = JSON.parse(text);
-            } catch (parseError) {
-                console.error('JSON parse error:', parseError);
-                throw new Error('Неверный формат ответа от сервера');
-            }
+            const data = JSON.parse(text);
             
             if (data.error) {
                 throw new Error(data.error);
@@ -338,7 +384,7 @@
                 const comment = op.comment || '—';
                 
                 html += `<div class="history-item">
-                    <div style="flex:1;">
+                    <div class="history-item-content" onclick='openEditModal(${JSON.stringify(op)})'>
                         <span class="history-date">${op.date}</span>
                         <b class="history-cat">${escapeHtml(op.category)}</b>
                         <div class="history-comm">${escapeHtml(comment)}</div>
@@ -576,17 +622,44 @@
         lucide.createIcons();
     }
 
-    function openActionModal() {
+    function openAddModal() {
+        editingOperation = null;
+        document.getElementById('modalTitle').textContent = 'Новая операция';
+        document.getElementById('saveBtn').textContent = 'Сохранить';
+        document.getElementById('deleteBtn').style.display = 'none';
         document.getElementById('overlay').classList.add('active');
         document.getElementById('actionModal').classList.add('active');
-        updateCategories();
+        document.getElementById('mType').value = 'expense';
         document.getElementById('mAmount').value = '';
         document.getElementById('mComment').value = '';
+        updateCategories();
     }
 
-    function closeActionModal() {
+    function openEditModal(operation) {
+        editingOperation = operation;
+        document.getElementById('modalTitle').textContent = 'Редактировать';
+        document.getElementById('saveBtn').textContent = 'Обновить';
+        document.getElementById('deleteBtn').style.display = 'block';
+        document.getElementById('overlay').classList.add('active');
+        document.getElementById('actionModal').classList.add('active');
+        
+        // Fill in the form
+        document.getElementById('mType').value = operation.type;
+        document.getElementById('mAmount').value = operation.amount;
+        document.getElementById('mComment').value = operation.comment || '';
+        
+        updateCategories();
+        document.getElementById('mCategory').value = operation.category;
+        
+        if (window.Telegram?.WebApp?.HapticFeedback) {
+            window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+        }
+    }
+
+    function closeModal() {
         document.getElementById('overlay').classList.remove('active');
         document.getElementById('actionModal').classList.remove('active');
+        editingOperation = null;
     }
 
     function updateCategories() {
@@ -633,7 +706,13 @@
             user_id: getUserId()
         };
         
-        closeActionModal();
+        // If editing, add action and rowId
+        if (editingOperation) {
+            data.action = 'editOperation';
+            data.rowId = editingOperation.rowId;
+        }
+        
+        closeModal();
         
         try {
             if (window.Telegram?.WebApp?.HapticFeedback) {
@@ -649,6 +728,33 @@
             setTimeout(() => loadData(), 1000);
         } catch (e) {
             console.error('Save error:', e);
+        }
+    }
+
+    async function deleteOperation() {
+        if (!editingOperation) return;
+        
+        if (!confirm('Удалить эту операцию?')) return;
+        
+        closeModal();
+        
+        try {
+            if (window.Telegram?.WebApp?.HapticFeedback) {
+                window.Telegram.WebApp.HapticFeedback.notificationOccurred('warning');
+            }
+            
+            await fetch(SHEET_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({
+                    action: 'deleteOperation',
+                    rowId: editingOperation.rowId
+                })
+            });
+            
+            setTimeout(() => loadData(), 1000);
+        } catch (e) {
+            console.error('Delete error:', e);
         }
     }
 
@@ -672,13 +778,9 @@
     }
 
     async function init() {
-        console.log('Initializing app...');
-        console.log('Sheet URL:', SHEET_URL);
-        
         try {
             const res = await fetch(SHEET_URL + '?action=getSavings');
             const text = await res.text();
-            console.log('Initial fetch response:', text.substring(0, 100));
             const data = JSON.parse(text);
             savingsGoals = data.map(s => s.name);
         } catch (e) {
@@ -697,4 +799,3 @@
 </script>
 </body>
 </html>
-
