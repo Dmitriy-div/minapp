@@ -23,7 +23,6 @@
             --radius-md: 12px;
         }
 
-        /* Telegram Wallet Style */
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             background-color: var(--bg); 
@@ -43,7 +42,6 @@
         .balance-label { font-size: 14px; color: var(--secondary-text); margin-bottom: 4px; }
         .balance-value { font-size: 38px; font-weight: 700; letter-spacing: -0.5px; }
 
-        /* Фильтр месяцев */
         .filter-container {
             display: flex;
             overflow-x: auto;
@@ -67,7 +65,6 @@
             color: white;
         }
 
-        /* Карточки */
         .card { 
             background: var(--card); 
             margin: 0 16px 16px; 
@@ -77,7 +74,6 @@
             border: 1px solid rgba(0,0,0,0.03);
         }
 
-        /* Операции */
         .history-item { 
             display: flex; 
             align-items: center; 
@@ -95,7 +91,6 @@
             margin-right: 12px;
         }
 
-        /* Скелетонная загрузка */
         .skeleton {
             background: linear-gradient(90deg, #f0f0f0 25%, #f8f8f8 50%, #f0f0f0 75%);
             background-size: 200% 100%;
@@ -107,7 +102,6 @@
             100% { background-position: -200% 0; }
         }
 
-        /* Навигация как в Wallet */
         .nav-bar { 
             position: fixed; 
             bottom: 0; 
@@ -131,7 +125,6 @@
         .nav-item.active { color: var(--accent); }
         .nav-item:active { transform: scale(0.9); }
 
-        /* Кнопка Добавить */
         .add-btn { 
             position: fixed; 
             bottom: 100px; 
@@ -148,7 +141,6 @@
             z-index: 999; 
         }
 
-        /* Копилка: Детали */
         .savings-details {
             max-height: 0;
             overflow: hidden;
@@ -163,9 +155,14 @@
             border-top: 0.5px solid #eee;
         }
 
-        .modal-sheet {
-            border-radius: 24px 24px 0 0;
-        }
+        /* Добавленные стили для модального окна */
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1001; }
+        .modal-sheet { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; padding: 20px; box-sizing: border-box; border-radius: 24px 24px 0 0; z-index: 1002; transition: transform 0.3s; transform: translateY(100%); }
+        .modal-sheet.show { transform: translateY(0); display: block; }
+        .overlay.show { display: block; }
+        .input-pill { width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 12px; border: 1px solid #e5e5ea; font-size: 16px; box-sizing: border-box; }
+        .btn-primary { width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 16px; font-weight: 600; color: white; margin-bottom: 10px; }
+        .btn-danger { width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 16px; font-weight: 600; margin-bottom: 20px; }
     </style>
 </head>
 <body>
@@ -176,7 +173,6 @@
     </div>
 
     <div id="filterWrapper"></div>
-
     <div id="app-content"></div>
 
     <div class="add-btn" onclick="openAddModal()">
@@ -205,7 +201,7 @@
     <div id="overlay" class="overlay" onclick="closeModal()"></div>
     <div id="actionModal" class="modal-sheet">
         <div style="width: 36px; height: 5px; background: #e5e5ea; border-radius: 3px; margin: 0 auto 20px;"></div>
-        <div id="modalTitle" class="modal-title">Операция</div>
+        <div id="modalTitle" class="modal-title" style="font-size: 20px; font-weight: 600; margin-bottom: 15px; text-align: center;">Операция</div>
         <select id="mType" class="input-pill" onchange="updateCategories()">
             <option value="expense">Расход</option>
             <option value="income">Доход</option>
@@ -215,26 +211,27 @@
         <select id="mCategory" class="input-pill"></select>
         <input type="text" id="mComment" class="input-pill" placeholder="Заметка">
         <button onclick="saveOperation()" class="btn-primary" id="saveBtn" style="background: var(--accent);">Подтвердить</button>
-        <button onclick="deleteOperation()" class="btn-danger" id="deleteBtn" style="display: none; background: none; color: var(--red); border: none;">Удалить операцию</button>
+        <button onclick="deleteOperation()" class="btn-danger" id="deleteBtn" style="display: none; background: none; color: var(--red); border: 1px solid var(--red);">Удалить операцию</button>
     </div>
 
 <script>
-    const SHEET_URL = "https://script.google.com/macros/s/AKfycbwT8aoQOe-BFs64dU-H6oCaAgT4BXvnbDqANVPpZ0IXr3vGYXNYQNtyi_YqGtHfIe-yeA/exec"; 
+    // ВАЖНО: ЗАМЕНИ ССЫЛКУ НИЖЕ НА НОВУЮ ПОСЛЕ "НОВОГО РАЗВЕРТЫВАНИЯ"
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycby9ZKayiyqwdbS5TY_if1g5gGRdAgZbVHhlXmvRKdT4yqU5dciYujTIwiljTeTh_cEFRQ/exec"; 
+    
     let currentTab = 'budget';
     let currentMonth = new Date().getMonth();
     let currentYear = new Date().getFullYear();
-    let savingsGoalsData = [];
+    let editingRowId = null;
 
-    // Инициализация
     async function init() {
         if (window.Telegram?.WebApp) {
             window.Telegram.WebApp.ready();
             window.Telegram.WebApp.setHeaderColor('#ffffff');
+            window.Telegram.WebApp.expand();
         }
         await loadData();
     }
 
-    // Скелетонная загрузка
     function showSkeleton() {
         const cont = document.getElementById('app-content');
         let skeletonHtml = '<div style="padding: 16px;">';
@@ -255,9 +252,7 @@
         el.classList.add('active');
         currentTab = tab;
         
-        // Показываем фильтр только в бюджете
         document.getElementById('filterWrapper').innerHTML = tab === 'budget' ? renderFilter() : '';
-        
         await loadData();
     }
 
@@ -289,13 +284,16 @@
             const res = await fetch(url);
             const data = await res.json();
             
+            if (data.error) throw new Error(data.error);
+
             if (currentTab === 'budget') renderBudget(data);
             if (currentTab === 'loans') renderLoans(data);
             if (currentTab === 'savings') renderSavings(data);
             if (currentTab === 'shopping') renderShopping(data);
             
         } catch (e) {
-            document.getElementById('app-content').innerHTML = `<div style="text-align:center; padding: 40px; color: var(--secondary-text);">Ошибка сети. Проверьте SHEET_URL.</div>`;
+            console.error(e);
+            document.getElementById('app-content').innerHTML = `<div style="text-align:center; padding: 40px; color: var(--red);">Ошибка загрузки данных.<br>Убедитесь, что ссылка SHEET_URL верная.</div>`;
         }
         lucide.createIcons();
     }
@@ -330,34 +328,74 @@
     }
 
     function renderSavings(data) {
-        savingsGoalsData = data;
         let html = '<div class="animate__animated animate__fadeIn">';
-        data.forEach((s, index) => {
-            const progress = Math.min(100, Math.round((s.current / s.target) * 100));
-            const left = (s.target - s.current).toFixed(2);
+        if (data.length === 0) html += '<div style="text-align:center; padding: 50px; opacity:0.5;">Нет данных о копилке</div>';
+        data.forEach(s => {
+            const current = parseFloat(s['Текущая сумма'] || s.current || 0);
+            const target = parseFloat(s['Цель'] || s.target || 1);
+            const name = s['Название'] || s.name || 'Копилка';
+            const progress = Math.min(100, Math.round((current / target) * 100));
+            const left = (target - current).toFixed(2);
             
             html += `
             <div class="card" onclick="this.classList.toggle('expanded')">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
                         <div style="font-size:13px; color:var(--secondary-text); margin-bottom:4px;">Цель</div>
-                        <b style="font-size:18px;">${s.name}</b>
+                        <b style="font-size:18px;">${name}</b>
                     </div>
                     <div style="text-align:right">
                         <div style="font-weight:800; color:var(--green);">${progress}%</div>
                     </div>
                 </div>
-                <div class="pb-bg" style="height:8px; margin: 15px 0;">
-                    <div class="pb-fill" style="width:${progress}%; background:var(--green);"></div>
+                <div class="pb-bg" style="height:8px; margin: 15px 0; background: var(--secondary-bg); border-radius: 4px; overflow: hidden;">
+                    <div class="pb-fill" style="width:${progress}%; height: 100%; background:var(--green);"></div>
                 </div>
                 <div class="savings-details">
                     <div style="display:flex; justify-content:space-between;">
-                        <span>Собрано: <b>${s.current}</b></span>
-                        <span>Цель: <b>${s.target}</b></span>
+                        <span>Собрано: <b>${current}</b></span>
+                        <span>Цель: <b>${target}</b></span>
                     </div>
                     <div style="margin-top:10px; color: var(--accent)">
-                        Осталось собрать: <b>${left} BYN</b>
+                        Осталось собрать: <b>${left > 0 ? left : 0} BYN</b>
                     </div>
+                </div>
+            </div>`;
+        });
+        document.getElementById('app-content').innerHTML = html + '</div>';
+    }
+
+    function renderLoans(data) {
+        let html = '<div class="animate__animated animate__fadeIn">';
+        if (data.length === 0) html += '<div style="text-align:center; padding: 50px; opacity:0.5;">Нет данных о рассрочках</div>';
+        data.forEach(l => {
+            html += `
+            <div class="card">
+                <h3 style="margin-top:0;">${l['Название'] || 'Рассрочка'}</h3>
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span style="color:var(--secondary-text)">Сумма платежа:</span>
+                    <b>${l['Сумма'] || 0} BYN</b>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:var(--secondary-text)">Статус:</span>
+                    <b style="color: ${l['Статус'] === 'Оплачено' ? 'var(--green)' : 'var(--orange)'}">${l['Статус'] || 'Ожидает'}</b>
+                </div>
+            </div>`;
+        });
+        document.getElementById('app-content').innerHTML = html + '</div>';
+    }
+
+    function renderShopping(data) {
+        let html = '<div class="animate__animated animate__fadeIn">';
+        if (data.length === 0) html += '<div style="text-align:center; padding: 50px; opacity:0.5;">Список покупок пуст</div>';
+        data.forEach(item => {
+            html += `
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-weight:600; font-size:16px;">${item['Название'] || 'Товар'}</div>
+                </div>
+                <div style="font-weight:700;">
+                    ${item['Цена'] || ''} BYN
                 </div>
             </div>`;
         });
@@ -371,10 +409,106 @@
         }
     }
 
-    // ... (Остальные функции: saveOperation, openAddModal, renderShopping оставить из вашего кода, но обновить стили кнопок) ...
+    // Логика Модального Окна
+    const expenseCategories = ['Еда', 'Транспорт', 'Жилье', 'Развлечения', 'Здоровье', 'Другое'];
+    const incomeCategories = ['Зарплата', 'Перевод', 'Кешбэк', 'Другое'];
+    const savingsCategories = ['В копилку'];
+
+    function updateCategories() {
+        const type = document.getElementById('mType').value;
+        const catSelect = document.getElementById('mCategory');
+        catSelect.innerHTML = '';
+        
+        let cats = expenseCategories;
+        if (type === 'income') cats = incomeCategories;
+        if (type === 'savings') cats = savingsCategories;
+
+        cats.forEach(c => {
+            catSelect.innerHTML += `<option value="${c}">${c}</option>`;
+        });
+    }
+
+    function openAddModal() {
+        haptic('light');
+        editingRowId = null;
+        document.getElementById('modalTitle').innerText = 'Новая операция';
+        document.getElementById('mAmount').value = '';
+        document.getElementById('mComment').value = '';
+        document.getElementById('mType').value = 'expense';
+        document.getElementById('deleteBtn').style.display = 'none';
+        updateCategories();
+        
+        document.getElementById('overlay').classList.add('show');
+        document.getElementById('actionModal').classList.add('show');
+    }
+
+    function openEditModal(op) {
+        haptic('light');
+        editingRowId = op.rowId;
+        document.getElementById('modalTitle').innerText = 'Редактировать';
+        document.getElementById('mType').value = op.type;
+        updateCategories();
+        document.getElementById('mCategory').value = op.category;
+        document.getElementById('mAmount').value = op.amount;
+        document.getElementById('mComment').value = op.comment;
+        document.getElementById('deleteBtn').style.display = 'block';
+
+        document.getElementById('overlay').classList.add('show');
+        document.getElementById('actionModal').classList.add('show');
+    }
+
+    function closeModal() {
+        document.getElementById('overlay').classList.remove('show');
+        document.getElementById('actionModal').classList.remove('show');
+    }
+
+    async function saveOperation() {
+        const amount = document.getElementById('mAmount').value;
+        if (!amount || amount <= 0) return alert('Введите корректную сумму');
+        
+        const payload = {
+            action: editingRowId ? 'editOperation' : 'addOperation',
+            rowId: editingRowId,
+            type: document.getElementById('mType').value,
+            category: document.getElementById('mCategory').value,
+            amount: parseFloat(amount),
+            comment: document.getElementById('mComment').value
+        };
+
+        closeModal();
+        haptic('success');
+        showSkeleton();
+
+        await fetch(SHEET_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+
+        await loadData();
+    }
+
+    async function deleteOperation() {
+        if (!editingRowId) return;
+        if (!confirm('Удалить эту операцию?')) return;
+
+        const payload = {
+            action: 'deleteOperation',
+            rowId: editingRowId
+        };
+
+        closeModal();
+        haptic('success');
+        showSkeleton();
+
+        await fetch(SHEET_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+
+        await loadData();
+    }
 
     init();
 </script>
 </body>
 </html>
-
