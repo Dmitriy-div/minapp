@@ -9,505 +9,207 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <style>
-        :root { 
-            --bg: #ffffff; 
-            --secondary-bg: #f4f4f7;
-            --accent: #007aff; 
-            --card: #ffffff; 
-            --text: #000000; 
-            --secondary-text: #8e8e93; 
-            --green: #34c759; 
-            --red: #ff3b30; 
-            --orange: #ff9500;
-            --radius-lg: 20px;
-            --radius-md: 12px;
-        }
+        :root { --bg: #f8f9fb; --accent: #007aff; --card: #ffffff; --text: #1c1c1e; --secondary: #8e8e93; --green: #34c759; --red: #ff3b30; --radius: 24px; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; }
 
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background-color: var(--bg); 
-            color: var(--text); 
-            margin: 0; 
-            padding-bottom: 90px; 
-            overflow-x: hidden;
-            -webkit-user-select: none;
-        }
+        .balance-header { background: linear-gradient(135deg, #007aff 0%, #0056b3 100%); color: white; margin: 16px; padding: 25px 20px; border-radius: var(--radius); text-align: center; box-shadow: 0 12px 30px rgba(0,122,255,0.2); }
+        .card { background: var(--card); margin: 16px; padding: 20px; border-radius: var(--radius); box-shadow: 0 8px 24px rgba(0,0,0,0.04); }
 
-        .balance-section {
-            padding: 30px 20px;
-            text-align: center;
-            background: var(--bg);
-        }
+        /* История */
+        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 0.5px solid #f2f2f7; }
+        .history-date { font-size: 11px; color: var(--secondary); }
+        .history-cat { font-weight: 700; font-size: 15px; display: block; }
+        .history-comm { font-size: 13px; color: var(--secondary); }
+        .history-amt { font-weight: 800; font-size: 16px; }
 
-        .balance-label { font-size: 14px; color: var(--secondary-text); margin-bottom: 4px; }
-        .balance-value { font-size: 38px; font-weight: 700; letter-spacing: -0.5px; }
+        /* Модалка */
+        .modal-sheet { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-radius: 30px 30px 0 0; padding: 20px 20px 40px; transform: translateY(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; max-height: 90vh; overflow-y: auto; }
+        .modal-sheet.active { transform: translateY(0); }
+        .overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.4); opacity:0; pointer-events:none; transition: 0.3s; z-index: 1999; }
+        .overlay.active { opacity:1; pointer-events:auto; }
 
-        .filter-container {
-            display: flex;
-            overflow-x: auto;
-            padding: 0 16px 15px;
-            gap: 8px;
-            scrollbar-width: none;
-        }
-        .filter-container::-webkit-scrollbar { display: none; }
-        .filter-chip {
-            padding: 8px 16px;
-            background: var(--secondary-bg);
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
-            white-space: nowrap;
-            color: var(--text);
-            border: none;
-        }
-        .filter-chip.active {
-            background: var(--accent);
-            color: white;
-        }
-
-        .card { 
-            background: var(--card); 
-            margin: 0 16px 16px; 
-            padding: 20px; 
-            border-radius: var(--radius-lg); 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            border: 1px solid rgba(0,0,0,0.03);
-        }
-
-        .history-item { 
-            display: flex; 
-            align-items: center; 
-            padding: 12px 0; 
-            border-bottom: 0.5px solid #f2f2f7;
-        }
-        .icon-circle {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--secondary-bg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 12px;
-        }
-
-        .skeleton {
-            background: linear-gradient(90deg, #f0f0f0 25%, #f8f8f8 50%, #f0f0f0 75%);
-            background-size: 200% 100%;
-            animation: skeleton-loading 1.5s infinite;
-            border-radius: 10px;
-        }
-        @keyframes skeleton-loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-
-        .nav-bar { 
-            position: fixed; 
-            bottom: 0; 
-            width: 100%; 
-            background: rgba(255, 255, 255, 0.85); 
-            backdrop-filter: saturate(180%) blur(20px); 
-            display: flex; 
-            padding: 8px 0 28px; 
-            border-top: 0.5px solid rgba(0,0,0,0.1); 
-            z-index: 1000; 
-        }
-        .nav-item { 
-            flex: 1; 
-            text-align: center; 
-            color: #8e8e93; 
-            font-size: 10px; 
-            font-weight: 500;
-            transition: transform 0.1s;
-        }
-        .nav-item i { width: 24px; height: 24px; margin-bottom: 4px; }
+        /* Элементы управления */
+        .input-pill { width: 100%; background: #f2f2f7; border: 2px solid transparent; padding: 14px; border-radius: 16px; margin-bottom: 12px; font-size: 16px; outline: none; }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: rgba(255,255,255,0.9); backdrop-filter: blur(20px); display: flex; padding: 10px 0 25px; border-top: 0.5px solid rgba(0,0,0,0.1); z-index: 1000; }
+        .nav-item { flex: 1; text-align: center; color: var(--secondary); font-size: 10px; }
         .nav-item.active { color: var(--accent); }
-        .nav-item:active { transform: scale(0.9); }
+        .add-btn { position: fixed; bottom: 85px; right: 20px; width: 60px; height: 60px; background: var(--accent); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 25px rgba(0,122,255,0.4); z-index: 999; }
 
-        .add-btn { 
-            position: fixed; 
-            bottom: 100px; 
-            right: 20px; 
-            width: 56px; 
-            height: 56px; 
-            background: var(--accent); 
-            color: white; 
-            border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            box-shadow: 0 4px 16px rgba(0,122,255,0.3); 
-            z-index: 999; 
-        }
+        /* Прогресс-бары */
+        .pb-bg { background: #f2f2f7; height: 10px; border-radius: 5px; margin: 10px 0; overflow: hidden; }
+        .pb-fill { height: 100%; transition: 1s ease-in-out; }
 
-        .savings-details {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-            font-size: 13px;
-            color: var(--secondary-text);
-        }
-        .card.expanded .savings-details {
-            max-height: 100px;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 0.5px solid #eee;
-        }
-
-        /* Добавленные стили для модального окна */
-        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1001; }
-        .modal-sheet { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; padding: 20px; box-sizing: border-box; border-radius: 24px 24px 0 0; z-index: 1002; transition: transform 0.3s; transform: translateY(100%); }
-        .modal-sheet.show { transform: translateY(0); display: block; }
-        .overlay.show { display: block; }
-        .input-pill { width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 12px; border: 1px solid #e5e5ea; font-size: 16px; box-sizing: border-box; }
-        .btn-primary { width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 16px; font-weight: 600; color: white; margin-bottom: 10px; }
-        .btn-danger { width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 16px; font-weight: 600; margin-bottom: 20px; }
+        /* Покупки */
+        .shop-item { display: flex; align-items: center; justify-content: space-between; padding: 15px; border-bottom: 0.5px solid #eee; }
+        .shop-item.bought { opacity: 0.4; }
+        .shop-item.bought span { text-decoration: line-through; }
+        .check-box { width: 22px; height: 22px; border: 2px solid var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+        .check-box.active { background: var(--accent); color: white; }
     </style>
 </head>
 <body>
-
-    <div class="balance-section">
-        <div class="balance-label">Общий баланс</div>
-        <div class="balance-value"><span id="totalBalance">0.00</span> <span style="font-size: 24px; vertical-align: middle; opacity: 0.5;">BYN</span></div>
+    <div class="balance-header">
+        <div style="font-size: 13px; opacity: 0.8;">Доступный баланс</div>
+        <div style="font-size: 30px; font-weight: 800;"><span id="totalBalance">0.00</span> BYN</div>
     </div>
 
-    <div id="filterWrapper"></div>
     <div id="app-content"></div>
 
-    <div class="add-btn" onclick="openAddModal()">
-        <i data-lucide="plus"></i>
-    </div>
+    <div class="add-btn" onclick="openActionModal()"><i data-lucide="plus"></i></div>
 
     <nav class="nav-bar">
-        <div class="nav-item active" onclick="switchTab('budget', this)">
-            <i data-lucide="layout-grid"></i>
-            <div>Бюджет</div>
-        </div>
-        <div class="nav-item" onclick="switchTab('loans', this)">
-            <i data-lucide="credit-card"></i>
-            <div>Рассрочки</div>
-        </div>
-        <div class="nav-item" onclick="switchTab('savings', this)">
-            <i data-lucide="pie-chart"></i>
-            <div>Копилка</div>
-        </div>
-        <div class="nav-item" onclick="switchTab('shopping', this)">
-            <i data-lucide="shopping-bag"></i>
-            <div>Покупки</div>
-        </div>
+        <div class="nav-item active" onclick="switchTab('budget', this)"><i data-lucide="wallet"></i><div>Бюджет</div></div>
+        <div class="nav-item" onclick="switchTab('loans', this)"><i data-lucide="credit-card"></i><div>Рассрочки</div></div>
+        <div class="nav-item" onclick="switchTab('savings', this)"><i data-lucide="target"></i><div>Цели</div></div>
+        <div class="nav-item" onclick="switchTab('savings', this)"><i data-lucide="target"></i><div>Копилка</div></div>
+        <div class="nav-item" onclick="switchTab('shopping', this)"><i data-lucide="shopping-basket"></i><div>Покупки</div></div>
     </nav>
 
-    <div id="overlay" class="overlay" onclick="closeModal()"></div>
+    <div id="overlay" class="overlay" onclick="closeActionModal()"></div>
     <div id="actionModal" class="modal-sheet">
-        <div style="width: 36px; height: 5px; background: #e5e5ea; border-radius: 3px; margin: 0 auto 20px;"></div>
-        <div id="modalTitle" class="modal-title" style="font-size: 20px; font-weight: 600; margin-bottom: 15px; text-align: center;">Операция</div>
+        <div style="width: 40px; height: 4px; background: #e5e5ea; border-radius: 2px; margin: 0 auto 15px;"></div>
         <select id="mType" class="input-pill" onchange="updateCategories()">
-            <option value="expense">Расход</option>
-            <option value="income">Доход</option>
-            <option value="savings">В копилку</option>
+            <option value="expense">📉 Расход</option>
+            <option value="income">📈 Доход</option>
+            <option value="savings">🎯 В копилку</option>
         </select>
         <input type="number" id="mAmount" class="input-pill" placeholder="Сумма" inputmode="decimal">
         <select id="mCategory" class="input-pill"></select>
-        <input type="text" id="mComment" class="input-pill" placeholder="Заметка">
-        <button onclick="saveOperation()" class="btn-primary" id="saveBtn" style="background: var(--accent);">Подтвердить</button>
-        <button onclick="deleteOperation()" class="btn-danger" id="deleteBtn" style="display: none; background: none; color: var(--red); border: 1px solid var(--red);">Удалить операцию</button>
+        <input type="text" id="mComment" class="input-pill" placeholder="Комментарий">
+        <button onclick="saveOperation()" style="width:100%; background: var(--accent); color: white; border: none; padding: 18px; border-radius: 18px; font-weight: 700; font-size: 16px;">Сохранить</button>
     </div>
 
 <script>
-    // ВАЖНО: ЗАМЕНИ ССЫЛКУ НИЖЕ НА НОВУЮ ПОСЛЕ "НОВОГО РАЗВЕРТЫВАНИЯ"
     const SHEET_URL = "https://script.google.com/macros/s/AKfycby9ZKayiyqwdbS5TY_if1g5gGRdAgZbVHhlXmvRKdT4yqU5dciYujTIwiljTeTh_cEFRQ/exec"; 
-    
-    let currentTab = 'budget';
-    let currentMonth = new Date().getMonth();
-    let currentYear = new Date().getFullYear();
-    let editingRowId = null;
-
-    async function init() {
-        if (window.Telegram?.WebApp) {
-            window.Telegram.WebApp.ready();
-            window.Telegram.WebApp.setHeaderColor('#ffffff');
-            window.Telegram.WebApp.expand();
-        }
-        await loadData();
-    }
-
-    function showSkeleton() {
-        const cont = document.getElementById('app-content');
-        let skeletonHtml = '<div style="padding: 16px;">';
-        for(let i=0; i<3; i++) {
-            skeletonHtml += `
-                <div class="card" style="height: 100px; margin: 0 0 16px 0;">
-                    <div class="skeleton" style="width: 40%; height: 20px; margin-bottom: 15px;"></div>
-                    <div class="skeleton" style="width: 100%; height: 12px; margin-bottom: 8px;"></div>
-                    <div class="skeleton" style="width: 80%; height: 12px;"></div>
-                </div>`;
-        }
-        cont.innerHTML = skeletonHtml + '</div>';
-    }
+    let currentTab = 'budget', savingsGoals = [];
 
     async function switchTab(tab, el) {
-        haptic('light');
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         el.classList.add('active');
         currentTab = tab;
-        
-        document.getElementById('filterWrapper').innerHTML = tab === 'budget' ? renderFilter() : '';
-        await loadData();
-    }
-
-    function renderFilter() {
-        const months = ['Все', 'Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
-        let html = '<div class="filter-container">';
-        months.forEach((m, i) => {
-            const active = (i === currentMonth + 1) ? 'active' : '';
-            html += `<button class="filter-chip ${active}" onclick="setMonth(${i-1})">${m}</button>`;
-        });
-        return html + '</div>';
-    }
-
-    async function setMonth(m) {
-        haptic('light');
-        currentMonth = m;
-        document.getElementById('filterWrapper').innerHTML = renderFilter();
-        await loadData();
+        loadData();
     }
 
     async function loadData() {
-        showSkeleton();
+        const cont = document.getElementById('app-content');
+        cont.innerHTML = '<div style="text-align:center; padding:50px; opacity:0.3;">Загрузка...</div>';
         try {
-            let url = SHEET_URL + `?action=get${currentTab.charAt(0).toUpperCase() + currentTab.slice(1)}`;
-            if (currentTab === 'budget' && currentMonth !== -1) {
-                url += `&month=${currentMonth + 1}&year=${currentYear}`;
-            }
-
-            const res = await fetch(url);
+            const action = currentTab === 'budget' ? '' : '?action=get' + currentTab.charAt(0).toUpperCase() + currentTab.slice(1);
+            const res = await fetch(SHEET_URL + action);
             const data = await res.json();
-            
-            if (data.error) throw new Error(data.error);
-
             if (currentTab === 'budget') renderBudget(data);
-            if (currentTab === 'loans') renderLoans(data);
-            if (currentTab === 'savings') renderSavings(data);
-            if (currentTab === 'shopping') renderShopping(data);
-            
-        } catch (e) {
-            console.error(e);
-            document.getElementById('app-content').innerHTML = `<div style="text-align:center; padding: 40px; color: var(--red);">Ошибка загрузки данных.<br>Убедитесь, что ссылка SHEET_URL верная.</div>`;
-        }
+            else if (currentTab === 'loans') renderLoans(data);
+            else if (currentTab === 'savings') { savingsGoals = data.map(s => s.name); renderSavings(data); }
+            else if (currentTab === 'shopping') renderShopping(data);
+        } catch (e) { cont.innerHTML = '<div style="padding:20px; color:red;">Ошибка сети</div>'; }
         lucide.createIcons();
     }
 
     function renderBudget(data) {
         document.getElementById('totalBalance').textContent = (data.totalIncome - data.totalExpense).toFixed(2);
         let html = '';
-        
-        if (data.operations && data.operations.length > 0) {
-            html += '<div class="card"><h3>Транзакции</h3>';
-            data.operations.reverse().forEach(op => {
-                const isInc = op.type === 'income';
-                html += `
-                <div class="history-item" onclick='openEditModal(${JSON.stringify(op)})'>
-                    <div class="icon-circle">
-                        <i data-lucide="${isInc ? 'arrow-down-left' : 'shopping-cart'}" style="color: ${isInc ? 'var(--green)' : 'var(--text)'}; width: 18px;"></i>
-                    </div>
-                    <div style="flex:1">
-                        <div style="font-weight:600; font-size:15px;">${op.category}</div>
-                        <div style="font-size:12px; color:var(--secondary-text);">${op.comment || op.date}</div>
-                    </div>
-                    <div style="font-weight:700; color: ${isInc ? 'var(--green)' : 'var(--text)'}">
-                        ${isInc ? '+' : '-'}${op.amount.toFixed(2)}
-                    </div>
-                </div>`;
-            });
-            html += '</div>';
-        } else {
-            html = '<div style="text-align:center; padding: 50px; opacity:0.5;">Нет операций за этот период</div>';
-        }
-        document.getElementById('app-content').innerHTML = html;
-    }
-
-    function renderSavings(data) {
-        let html = '<div class="animate__animated animate__fadeIn">';
-        if (data.length === 0) html += '<div style="text-align:center; padding: 50px; opacity:0.5;">Нет данных о копилке</div>';
-        data.forEach(s => {
-            const current = parseFloat(s['Текущая сумма'] || s.current || 0);
-            const target = parseFloat(s['Цель'] || s.target || 1);
-            const name = s['Название'] || s.name || 'Копилка';
-            const progress = Math.min(100, Math.round((current / target) * 100));
-            const left = (target - current).toFixed(2);
-            
-            html += `
-            <div class="card" onclick="this.classList.toggle('expanded')">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <div style="font-size:13px; color:var(--secondary-text); margin-bottom:4px;">Цель</div>
-                        <b style="font-size:18px;">${name}</b>
-                    </div>
-                    <div style="text-align:right">
-                        <div style="font-weight:800; color:var(--green);">${progress}%</div>
-                    </div>
-                </div>
-                <div class="pb-bg" style="height:8px; margin: 15px 0; background: var(--secondary-bg); border-radius: 4px; overflow: hidden;">
-                    <div class="pb-fill" style="width:${progress}%; height: 100%; background:var(--green);"></div>
-                </div>
-                <div class="savings-details">
-                    <div style="display:flex; justify-content:space-between;">
-                        <span>Собрано: <b>${current}</b></span>
-                        <span>Цель: <b>${target}</b></span>
-                    </div>
-                    <div style="margin-top:10px; color: var(--accent)">
-                        Осталось собрать: <b>${left > 0 ? left : 0} BYN</b>
-                    </div>
-                </div>
-            </div>`;
+        if (data.totalExpense > 0) html += '<div class="card animate__animated animate__fadeIn"><canvas id="expenseChart" style="max-height:180px;"></canvas></div>';
+        html += '<div class="card animate__animated animate__fadeInUp"><h3>Последние операции</h3>';
+        data.operations.slice().reverse().forEach(op => {
+            html += `<div class="history-item"><div style="flex:1;"><span class="history-date">${op.date}</span><b class="history-cat">${op.category}</b><div class="history-comm">${op.comment || '—'}</div></div><div class="history-amt" style="color:${op.type==='income'?'var(--green)':'var(--red)'}">${op.type==='income'?'+':'-'}${op.amount.toFixed(2)}</div></div>`;
         });
-        document.getElementById('app-content').innerHTML = html + '</div>';
+        contHTML(html + '</div>');
+        if (data.totalExpense > 0) {
+            new Chart(document.getElementById('expenseChart'), { type: 'doughnut', data: { labels: Object.keys(data.categorySums), datasets: [{ data: Object.values(data.categorySums), backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'] }] }, options: { cutout: '75%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, font: { size: 10 } } } } } });
+        }
     }
 
     function renderLoans(data) {
-        let html = '<div class="animate__animated animate__fadeIn">';
-        if (data.length === 0) html += '<div style="text-align:center; padding: 50px; opacity:0.5;">Нет данных о рассрочках</div>';
+        let html = '<div class="animate__animated animate__fadeInUp">';
         data.forEach(l => {
-            html += `
-            <div class="card">
-                <h3 style="margin-top:0;">${l['Название'] || 'Рассрочка'}</h3>
-                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                    <span style="color:var(--secondary-text)">Сумма платежа:</span>
-                    <b>${l['Сумма'] || 0} BYN</b>
-                </div>
-                <div style="display:flex; justify-content:space-between;">
-                    <span style="color:var(--secondary-text)">Статус:</span>
-                    <b style="color: ${l['Статус'] === 'Оплачено' ? 'var(--green)' : 'var(--orange)'}">${l['Статус'] || 'Ожидает'}</b>
-                </div>
+            const p = Math.min(100, Math.round(((l.total - l.balance) / l.total) * 100));
+            html += `<div class="card" onclick="openPlan('${l.id}','${l.name}')">
+                <div style="display:flex; justify-content:space-between;"><b>${l.name}</b><span style="color:var(--accent); font-weight:800;">${p}%</span></div>
+                <div class="pb-bg"><div class="pb-fill" style="width:${p}%; background:var(--accent);"></div></div>
+                <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--secondary);"><span>Остаток: ${l.balance.toFixed(2)}</span><span>Всего: ${l.total}</span></div>
             </div>`;
         });
-        document.getElementById('app-content').innerHTML = html + '</div>';
+        contHTML(html + '</div>');
+    }
+
+    async function openPlan(id, name) {
+        contHTML('<div style="text-align:center; padding:50px; opacity:0.3;">Загрузка графика...</div>');
+        const res = await fetch(`${SHEET_URL}?action=getInstallmentPlan&loanId=${id}`);
+        const plan = await res.json();
+        let html = `<div class="card animate__animated animate__zoomIn"><h3>${name}</h3>`;
+        plan.forEach(p => {
+            const isP = p.status === 'paid';
+            html += `<div class="history-item"><div style="flex:1;"><b>${p.date}</b><div>${p.amount.toFixed(2)} BYN</div></div>
+                <div>${isP ? '<span style="color:var(--green); font-weight:bold;">✔ OK</span>' : `<button onclick="payInstallment('${id}','${p.date}')" style="background:var(--accent); color:white; border:none; padding:8px 12px; border-radius:10px;">Оплатить</button>`}</div></div>`;
+        });
+        contHTML(html + `<button onclick="loadData()" style="width:100%; margin-top:20px; border:none; background:#f2f2f7; padding:15px; border-radius:15px; font-weight:bold;">← Назад</button></div>`);
+    }
+
+    async function payInstallment(id, d) {
+        await fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'markPaid', loanId: id, date: d }) });
+        openPlan(id, "Обновление...");
+    }
+
+    function renderSavings(data) {
+        let html = '<div class="animate__animated animate__fadeInUp">';
+        data.forEach(s => {
+            const p = Math.min(100, Math.round((s.current / s.target) * 100));
+            html += `<div class="card">
+                <div style="display:flex; justify-content:space-between;"><b>${s.name}</b><span style="color:var(--green); font-weight:800;">${p}%</span></div>
+                <div class="pb-bg"><div class="pb-fill" style="width:${p}%; background:var(--green);"></div></div>
+                <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--secondary);"><span>Собрано: ${s.current.toFixed(2)}</span><span>Цель: ${s.target}</span></div>
+            </div>`;
+        });
+        contHTML(html + '</div>');
     }
 
     function renderShopping(data) {
-        let html = '<div class="animate__animated animate__fadeIn">';
-        if (data.length === 0) html += '<div style="text-align:center; padding: 50px; opacity:0.5;">Список покупок пуст</div>';
+        let html = '<div class="card animate__animated animate__fadeInUp"><div style="display:flex; gap:8px; margin-bottom:15px;"><input type="text" id="shopInput" class="input-pill" placeholder="Что купить?" style="margin:0;"><button onclick="addShopItem()" style="background:var(--accent); color:white; border:none; padding:0 20px; border-radius:15px; font-weight:bold;">+</button></div>';
         data.forEach(item => {
-            html += `
-            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                    <div style="font-weight:600; font-size:16px;">${item['Название'] || 'Товар'}</div>
-                </div>
-                <div style="font-weight:700;">
-                    ${item['Цена'] || ''} BYN
-                </div>
-            </div>`;
+            const isB = item.status === 'bought';
+            html += `<div class="shop-item ${isB?'bought':''}" onclick="toggleShopItem(${item.id}, '${isB?'pending':'bought'}')"><span>${item.name}</span><div class="check-box ${isB?'active':''}">${isB?'✔':''}</div></div>`;
         });
-        document.getElementById('app-content').innerHTML = html + '</div>';
+        contHTML(html + '</div>');
     }
 
-    function haptic(style) {
-        if (window.Telegram?.WebApp?.HapticFeedback) {
-            if (style === 'light') window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-            if (style === 'success') window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-        }
+    async function addShopItem() {
+        const n = document.getElementById('shopInput').value; if(!n) return;
+        await fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'addShopping', name: n, user_id: 'user' }) });
+        loadData();
     }
 
-    // Логика Модального Окна
-    const expenseCategories = ['Еда', 'Транспорт', 'Жилье', 'Развлечения', 'Здоровье', 'Другое'];
-    const incomeCategories = ['Зарплата', 'Перевод', 'Кешбэк', 'Другое'];
-    const savingsCategories = ['В копилку'];
+    async function toggleShopItem(id, s) {
+        if(window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+        await fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'toggleShopping', id: id, status: s }) });
+        loadData();
+    }
+
+    function contHTML(h) { document.getElementById('app-content').innerHTML = h; lucide.createIcons(); }
+    function openActionModal() { document.getElementById('overlay').classList.add('active'); document.getElementById('actionModal').classList.add('active'); updateCategories(); }
+    function closeActionModal() { document.getElementById('overlay').classList.remove('active'); document.getElementById('actionModal').classList.remove('active'); }
 
     function updateCategories() {
-        const type = document.getElementById('mType').value;
-        const catSelect = document.getElementById('mCategory');
-        catSelect.innerHTML = '';
-        
-        let cats = expenseCategories;
-        if (type === 'income') cats = incomeCategories;
-        if (type === 'savings') cats = savingsCategories;
-
-        cats.forEach(c => {
-            catSelect.innerHTML += `<option value="${c}">${c}</option>`;
-        });
-    }
-
-    function openAddModal() {
-        haptic('light');
-        editingRowId = null;
-        document.getElementById('modalTitle').innerText = 'Новая операция';
-        document.getElementById('mAmount').value = '';
-        document.getElementById('mComment').value = '';
-        document.getElementById('mType').value = 'expense';
-        document.getElementById('deleteBtn').style.display = 'none';
-        updateCategories();
-        
-        document.getElementById('overlay').classList.add('show');
-        document.getElementById('actionModal').classList.add('show');
-    }
-
-    function openEditModal(op) {
-        haptic('light');
-        editingRowId = op.rowId;
-        document.getElementById('modalTitle').innerText = 'Редактировать';
-        document.getElementById('mType').value = op.type;
-        updateCategories();
-        document.getElementById('mCategory').value = op.category;
-        document.getElementById('mAmount').value = op.amount;
-        document.getElementById('mComment').value = op.comment;
-        document.getElementById('deleteBtn').style.display = 'block';
-
-        document.getElementById('overlay').classList.add('show');
-        document.getElementById('actionModal').classList.add('show');
-    }
-
-    function closeModal() {
-        document.getElementById('overlay').classList.remove('show');
-        document.getElementById('actionModal').classList.remove('show');
+        const t = document.getElementById('mType').value, c = document.getElementById('mCategory'); c.innerHTML = '';
+        const cats = t === 'income' ? ['Зарплата','Colour Wood','Подарок','Другое'] : (t === 'savings' ? savingsGoals : ['Продукты','Машина','Коммуналка','Развлечения','Здоровье','Кредиты/рассрочки','Питомцы','Расходы на CW','Церковь','Налоги','Красота','Топливо','Другое']);
+        const cats = t === 'income' ? ['Зарплата','Colour Wood','Подарок','Другое'] : (t === 'savings' ? savingsGoals : ['Продукты','Машина','Одежда','Коммуналка','Развлечения','Здоровье','Подарки','Кредиты/рассрочки','Питомцы','Расходы на CW','Церковь','Налоги','Красота','Топливо','Другое']);
+        cats.forEach(x => c.innerHTML += `<option value="${x}">${x}</option>`);
     }
 
     async function saveOperation() {
-        const amount = document.getElementById('mAmount').value;
-        if (!amount || amount <= 0) return alert('Введите корректную сумму');
-        
-        const payload = {
-            action: editingRowId ? 'editOperation' : 'addOperation',
-            rowId: editingRowId,
-            type: document.getElementById('mType').value,
-            category: document.getElementById('mCategory').value,
-            amount: parseFloat(amount),
-            comment: document.getElementById('mComment').value
-        };
-
-        closeModal();
-        haptic('success');
-        showSkeleton();
-
-        await fetch(SHEET_URL, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        });
-
-        await loadData();
+        const a = document.getElementById('mAmount').value; if(!a) return;
+        const d = { type: document.getElementById('mType').value, amount: a, category: document.getElementById('mCategory').value, comment: document.getElementById('mComment').value, user_id: 'user' };
+        closeActionModal();
+        if(window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        await fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(d) });
+        loadData();
     }
 
-    async function deleteOperation() {
-        if (!editingRowId) return;
-        if (!confirm('Удалить эту операцию?')) return;
-
-        const payload = {
-            action: 'deleteOperation',
-            rowId: editingRowId
-        };
-
-        closeModal();
-        haptic('success');
-        showSkeleton();
-
-        await fetch(SHEET_URL, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        });
-
-        await loadData();
+    async function init() {
+        try { const res = await fetch(SHEET_URL + '?action=getSavings'); const d = await res.json(); savingsGoals = d.map(s => s.name); } catch(e) {}
+        loadData();
+        window.Telegram.WebApp.expand();
     }
-
     init();
 </script>
 </body>
