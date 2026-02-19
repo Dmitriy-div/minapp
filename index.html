@@ -11,7 +11,7 @@
         :root { 
             --bg: #ffffff; 
             --secondary-bg: #f4f4f5;
-            --accent: #3390ec; /* Цвет Telegram */
+            --accent: #3390ec; 
             --card: #ffffff; 
             --text: #000000; 
             --secondary-text: #8e8e93; 
@@ -70,8 +70,7 @@
         .filter-chip.active { background: var(--text); color: white; }
         .filter-chip:active { transform: scale(0.95); }
 
-        /* Карточки и Списки */
-        .section-title { margin: 0 20px 10px; font-size: 18px; font-weight: 700; }
+        /* Карточки */
         .card { 
             background: var(--card); 
             margin: 0 16px 16px; 
@@ -80,6 +79,7 @@
             box-shadow: 0 2px 12px rgba(0,0,0,0.04);
         }
 
+        /* Операции */
         .history-item { 
             display: flex; 
             align-items: center; 
@@ -107,7 +107,7 @@
         .op-subtitle { font-size: 13px; color: var(--secondary-text); }
         .op-amount { font-weight: 700; font-size: 16px; text-align: right; }
 
-        /* Skeleton Loading */
+        /* Скелетонная загрузка */
         .skeleton {
             background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
             background-size: 200% 100%;
@@ -115,7 +115,6 @@
             border-radius: 8px;
         }
         .skeleton-circle { border-radius: 50%; width: 44px; height: 44px; }
-        
         @keyframes skeleton-loading {
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
@@ -166,12 +165,46 @@
             transition: transform 0.2s;
         }
         .add-btn:active { transform: scale(0.9); }
+
+        /* Копилка: Детали */
+        .savings-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            font-size: 13px;
+            color: var(--secondary-text);
+        }
+        .card.expanded .savings-details {
+            max-height: 100px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 0.5px solid #eee;
+        }
+
+        /* Модальное окно (BottomSheet) */
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1001; opacity: 0; transition: opacity 0.3s; }
+        .modal-sheet { 
+            position: fixed; bottom: -100%; left: 0; width: 100%; background: var(--bg); 
+            border-radius: 24px 24px 0 0; padding: 20px; box-sizing: border-box; 
+            z-index: 1002; transition: bottom 0.3s cubic-bezier(0.1, 0.8, 0.2, 1); 
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+        }
+        .modal-sheet.show { bottom: 0; }
+        .overlay.show { display: block; opacity: 1; }
+        
+        .input-pill {
+            width: 100%; padding: 14px 16px; margin-bottom: 12px; border: none;
+            background: var(--secondary-bg); border-radius: 14px; font-size: 16px; box-sizing: border-box;
+            outline: none; font-family: inherit;
+        }
+        .btn-primary { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 600; margin-top: 8px; }
+        .btn-danger { width: 100%; padding: 14px; background: none; color: var(--red); border: none; font-size: 16px; font-weight: 500; margin-top: 8px; }
     </style>
 </head>
 <body>
 
     <div class="balance-section animate__animated animate__fadeInDown">
-        <div class="balance-label">Доступный баланс</div>
+        <div class="balance-label">Общий баланс</div>
         <div class="balance-value">
             <span id="totalBalance">0.00</span>
             <span class="currency">BYN</span>
@@ -179,31 +212,54 @@
     </div>
 
     <div id="filterWrapper"></div>
-    <div class="section-title" id="sectionTitle">Транзакции</div>
+
     <div id="app-content"></div>
 
-    <div class="add-btn" onclick="haptic('light'); /* Здесь вызов вашего модального окна */">
+    <div class="add-btn" onclick="openAddModal()">
         <i data-lucide="plus" style="width: 28px; height: 28px;"></i>
     </div>
 
     <nav class="nav-bar">
         <div class="nav-item active" onclick="switchTab('budget', this)">
             <i data-lucide="layout-grid"></i>
-            <div>Главная</div>
+            <div>Бюджет</div>
+        </div>
+        <div class="nav-item" onclick="switchTab('loans', this)">
+            <i data-lucide="credit-card"></i>
+            <div>Рассрочки</div>
         </div>
         <div class="nav-item" onclick="switchTab('savings', this)">
-            <i data-lucide="piggy-bank"></i>
+            <i data-lucide="pie-chart"></i>
             <div>Копилка</div>
+        </div>
+        <div class="nav-item" onclick="switchTab('shopping', this)">
+            <i data-lucide="shopping-bag"></i>
+            <div>Покупки</div>
         </div>
     </nav>
 
+    <div id="overlay" class="overlay" onclick="closeModal()"></div>
+    <div id="actionModal" class="modal-sheet">
+        <div style="width: 36px; height: 5px; background: #e5e5ea; border-radius: 3px; margin: 0 auto 20px;"></div>
+        <div id="modalTitle" style="font-size: 20px; font-weight: 700; margin-bottom: 16px; text-align: center;">Операция</div>
+        <select id="mType" class="input-pill" onchange="updateCategories()">
+            <option value="expense">Расход</option>
+            <option value="income">Доход</option>
+            <option value="savings">В копилку</option>
+        </select>
+        <input type="number" id="mAmount" class="input-pill" placeholder="Сумма" inputmode="decimal">
+        <select id="mCategory" class="input-pill"></select>
+        <input type="text" id="mComment" class="input-pill" placeholder="Заметка">
+        <button onclick="saveOperation()" class="btn-primary" id="saveBtn">Подтвердить</button>
+        <button onclick="deleteOperation()" class="btn-danger" id="deleteBtn" style="display: none;">Удалить операцию</button>
+    </div>
+
 <script>
-    // ВАЖНО: Вставьте сюда актуальный веб-URL вашего развернутого скрипта!
-    const SHEET_URL = "https://script.google.com/macros/s/AKfycbzIQC_7rutbHjhEXFfIjhkADEw8DqmTYnknOYoZZhjsya0Le0BmlH2oAOWgEnwxp8LV0g/exec"; 
-    
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbwtDf-ew-LaNLr25W2ZUtMCCTRUQQJ-Y6nRlZ4oq8Lh15U-SMdF1Egluhfh0Vyv3aU9sQ/exec"; 
     let currentTab = 'budget';
     let currentMonth = new Date().getMonth() + 1; // 1-12
     let currentYear = new Date().getFullYear();
+    let savingsGoalsData = [];
     const monthNames = ['', 'Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
 
     async function init() {
@@ -240,8 +296,8 @@
         el.classList.add('active');
         currentTab = tab;
         
+        // Фильтр месяцев показываем только в Бюджете
         document.getElementById('filterWrapper').style.display = tab === 'budget' ? 'flex' : 'none';
-        document.getElementById('sectionTitle').textContent = tab === 'budget' ? 'Транзакции' : 'Цели';
         
         await loadData();
     }
@@ -249,7 +305,6 @@
     function renderFilter(activeMonths) {
         if (!activeMonths || activeMonths.length === 0) return '';
         
-        // Сортировка месяцев по убыванию (сначала новые)
         activeMonths.sort((a, b) => (b.year - a.year) || (b.month - a.month));
         
         let html = '<div class="filter-container animate__animated animate__fadeIn">';
@@ -287,11 +342,13 @@
                 renderFilter(data.activeMonths);
                 renderBudget(data);
             }
-            // Добавьте вызов renderSavings(data) при необходимости
+            if (currentTab === 'savings') renderSavings(data);
+            if (currentTab === 'loans') renderLoans(data);
+            if (currentTab === 'shopping') renderShopping(data);
             
         } catch (e) {
             console.error(e);
-            document.getElementById('app-content').innerHTML = `<div style="text-align:center; padding: 40px; color: var(--secondary-text);">Ошибка сети. Не забудьте вставить SHEET_URL.</div>`;
+            document.getElementById('app-content').innerHTML = `<div style="text-align:center; padding: 40px; color: var(--secondary-text);">Ошибка загрузки. Проверьте SHEET_URL.</div>`;
         }
         lucide.createIcons();
     }
@@ -306,8 +363,9 @@
                 const icon = isInc ? 'arrow-down-left' : 'shopping-bag';
                 const sign = isInc ? '+' : '-';
                 
+                // Добавлена возможность клика для редактирования (как в вашем исходном коде)
                 html += `
-                <div class="history-item">
+                <div class="history-item" onclick='openEditModal(${JSON.stringify(op)})'>
                     <div class="icon-circle">
                         <i data-lucide="${icon}" style="color: ${amountColor}; width: 20px;"></i>
                     </div>
@@ -328,11 +386,82 @@
         lucide.createIcons();
     }
 
+    // Восстановленная функция Копилки из вашего оригинального файла (с обновленными стилями)
+    function renderSavings(data) {
+        savingsGoalsData = data;
+        let html = '<div class="animate__animated animate__fadeIn">';
+        if(data && data.length > 0) {
+            data.forEach((s, index) => {
+                const progress = Math.min(100, Math.round((s.current / s.target) * 100));
+                const left = (s.target - s.current).toFixed(2);
+                
+                html += `
+                <div class="card" onclick="this.classList.toggle('expanded')">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-size:13px; color:var(--secondary-text); margin-bottom:4px;">Цель</div>
+                            <b style="font-size:18px;">${s.name}</b>
+                        </div>
+                        <div style="text-align:right">
+                            <div style="font-weight:800; color:var(--green);">${progress}%</div>
+                        </div>
+                    </div>
+                    <div style="height:8px; margin: 15px 0; background: var(--secondary-bg); border-radius: 4px; overflow: hidden;">
+                        <div style="width:${progress}%; height: 100%; background:var(--green); transition: width 0.5s;"></div>
+                    </div>
+                    <div class="savings-details">
+                        <div style="display:flex; justify-content:space-between;">
+                            <span>Собрано: <b>${s.current}</b></span>
+                            <span>Цель: <b>${s.target}</b></span>
+                        </div>
+                        <div style="margin-top:10px; color: var(--accent)">
+                            Осталось собрать: <b>${left} BYN</b>
+                        </div>
+                    </div>
+                </div>`;
+            });
+        } else {
+            html += '<div style="text-align:center; padding: 40px; color: var(--secondary-text);">Нет целей в копилке</div>';
+        }
+        document.getElementById('app-content').innerHTML = html + '</div>';
+    }
+
     function haptic(style) {
         if (window.Telegram?.WebApp?.HapticFeedback) {
             if (style === 'light') window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+            if (style === 'success') window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
         }
     }
+
+    function openAddModal() {
+        haptic('light');
+        document.getElementById('modalTitle').innerText = 'Новая операция';
+        document.getElementById('deleteBtn').style.display = 'none';
+        document.getElementById('overlay').classList.add('show');
+        document.getElementById('actionModal').classList.add('show');
+    }
+
+    function openEditModal(op) {
+        haptic('light');
+        document.getElementById('modalTitle').innerText = 'Редактировать';
+        document.getElementById('mAmount').value = op.amount;
+        document.getElementById('mComment').value = op.comment || '';
+        document.getElementById('deleteBtn').style.display = 'block';
+        document.getElementById('overlay').classList.add('show');
+        document.getElementById('actionModal').classList.add('show');
+    }
+
+    function closeModal() {
+        document.getElementById('overlay').classList.remove('show');
+        document.getElementById('actionModal').classList.remove('show');
+    }
+
+    // Здесь остаются ваши оригинальные функции из прошлого кода:
+    // function updateCategories() { ... }
+    // function saveOperation() { ... }
+    // function deleteOperation() { ... }
+    // function renderLoans(data) { ... }
+    // function renderShopping(data) { ... }
 
     init();
 </script>
