@@ -62,7 +62,6 @@
         <div class="nav-item active" onclick="switchTab('budget', this)"><i data-lucide="wallet"></i><div>Бюджет</div></div>
         <div class="nav-item" onclick="switchTab('loans', this)"><i data-lucide="credit-card"></i><div>Рассрочки</div></div>
         <div class="nav-item" onclick="switchTab('savings', this)"><i data-lucide="target"></i><div>Цели</div></div>
-        <div class="nav-item" onclick="switchTab('savings', this)"><i data-lucide="target"></i><div>Копилка</div></div>
         <div class="nav-item" onclick="switchTab('shopping', this)"><i data-lucide="shopping-basket"></i><div>Покупки</div></div>
     </nav>
 
@@ -81,7 +80,7 @@
     </div>
 
 <script>
-    const SHEET_URL = "https://script.google.com/macros/s/AKfycbxiRxh9GZq0toYl6PZ650s-8BZadqo67sxMtwGGn5zibtwm495Dxl-kI7OkUc07lFef2Q/exec"; 
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbxKCAWetJ73BI3ji94mKVWMpq2UbiPdNEUdWCafwzwFI5r10H5hzlSCTF8lbVD2i06ehg/exec"; 
     let currentTab = 'budget', savingsGoals = [];
 
     async function switchTab(tab, el) {
@@ -110,6 +109,7 @@
         document.getElementById('totalBalance').textContent = (data.totalIncome - data.totalExpense).toFixed(2);
         let html = '';
         if (data.totalExpense > 0) html += '<div class="card animate__animated animate__fadeIn"><canvas id="expenseChart" style="max-height:180px;"></canvas></div>';
+        html += '<div class="card animate__animated animate__fadeInUp"><h3>Транзакции</h3>';
         html += '<div class="card animate__animated animate__fadeInUp"><h3>Последние операции</h3>';
         data.operations.slice().reverse().forEach(op => {
             html += `<div class="history-item"><div style="flex:1;"><span class="history-date">${op.date}</span><b class="history-cat">${op.category}</b><div class="history-comm">${op.comment || '—'}</div></div><div class="history-amt" style="color:${op.type==='income'?'var(--green)':'var(--red)'}">${op.type==='income'?'+':'-'}${op.amount.toFixed(2)}</div></div>`;
@@ -191,8 +191,8 @@
 
     function updateCategories() {
         const t = document.getElementById('mType').value, c = document.getElementById('mCategory'); c.innerHTML = '';
+        const cats = t === 'income' ? ['Зарплата','Перевод','Другое'] : (t === 'savings' ? savingsGoals : ['Продукты','Транспорт','Жилье','Развлечения','Здоровье','Другое']);
         const cats = t === 'income' ? ['Зарплата','Colour Wood','Подарок','Другое'] : (t === 'savings' ? savingsGoals : ['Продукты','Машина','Коммуналка','Развлечения','Здоровье','Кредиты/рассрочки','Питомцы','Расходы на CW','Церковь','Налоги','Красота','Топливо','Другое']);
-        const cats = t === 'income' ? ['Зарплата','Colour Wood','Подарок','Другое'] : (t === 'savings' ? savingsGoals : ['Продукты','Машина','Одежда','Коммуналка','Развлечения','Здоровье','Подарки','Кредиты/рассрочки','Питомцы','Расходы на CW','Церковь','Налоги','Красота','Топливо','Другое']);
         cats.forEach(x => c.innerHTML += `<option value="${x}">${x}</option>`);
     }
 
@@ -214,5 +214,3 @@
 </script>
 </body>
 </html>
-
-
